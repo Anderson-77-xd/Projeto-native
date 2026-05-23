@@ -25,19 +25,24 @@ export default function Home() {
       <Button
         title="Entrar"
         onPress={() => {
-          if (name.trim() !== '') { // Verifica se o nome foi preenchido
-            router.push('/dashboard'); // Navega para /dashboard
+
+          if (name.trim() === '') {
+            alert('Por favor, digite seu nome!');
+          } else if (senha.trim() === '') {
+            alert('Por favor, digite sua senha!');
           } else {
-            alert('Por favor, digite seu nome!'); // Exibe um alerta se o nome estiver vazio
-          }
-           if (senha.trim() !== '') { // Verifica se o nome foi preenchido
-            router.push('/dashboard'); // Navega para /dashboard
-          } else {
-            alert('Por favor, digite sua senha!'); // Exibe um alerta se o nome estiver vazio
+            router.push('/(drawer)/dashboard' as any);
           }
         }}
       />
+
+      
+      <Button
+  title="Criar conta"
+  onPress={() => router.push('/cadastro')}
+/>
     </View>
+  
   );
 }
 
