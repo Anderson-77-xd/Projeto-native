@@ -87,7 +87,7 @@ export default function Cadastro() {
         <Text style={styles.btnText}>Criar conta</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.btnLogin} onPress={() => router.replace('/')}>
+      <TouchableOpacity style={styles.btnLogin} onPress={() => router.replace('/home')}>
         <Text style={styles.btnLoginText}>
           Já tem conta? <Text style={styles.destaque}>Entrar</Text>
         </Text>

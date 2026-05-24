@@ -31,7 +31,7 @@ export default function Home() {
           } else if (senha.trim() === '') {
             alert('Por favor, digite sua senha!');
           } else {
-            router.push('/(drawer)/dashboard' as any);
+            router.push('/(drawer)/home' as any);
           }
         }}
       />

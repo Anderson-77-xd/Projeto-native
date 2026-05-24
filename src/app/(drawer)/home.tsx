@@ -73,42 +73,7 @@ export default function Home() {
 
       </ImageBackground>
 
-      {/* CATEGORIAS */}
-
-      <Text style={styles.sectionTitle}>
-        Categorias
-      </Text>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-      >
-
-        <TouchableOpacity style={styles.categoria}>
-          <Text style={styles.categoriaText}>
-            Família
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.categoria}>
-          <Text style={styles.categoriaText}>
-            Noturno
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.categoria}>
-          <Text style={styles.categoriaText}>
-            Esportivo
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.categoria}>
-          <Text style={styles.categoriaText}>
-            Restaurante
-          </Text>
-        </TouchableOpacity>
-
-      </ScrollView>
+     
 
       {/* DESTAQUES */}
 
