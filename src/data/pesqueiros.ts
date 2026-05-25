@@ -1,0 +1,138 @@
+export type Pesqueiro = {
+  id: string;
+  nome: string;
+  cidade: string;
+  estado: string;
+  imagem: string;
+  descricao: string;
+  preco: number;
+  horario: string;
+  avaliacao: number;
+  totalAvaliacoes: number;
+  categoria: string;
+  especies: string[];
+  distancia: string;
+};
+
+export const pesqueiros: Pesqueiro[] = [
+  {
+    id: '1',
+    nome: 'Pesqueiro Lago Azul',
+    cidade: 'Osasco',
+    estado: 'SP',
+    imagem: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600',
+    descricao: 'Lago bem cuidado, ideal para pesca em família com crianças. Estrutura completa com banheiros e lanchonete.',
+    preco: 30,
+    horario: '08:00 - 18:00',
+    avaliacao: 4.8,
+    totalAvaliacoes: 124,
+    categoria: 'Família',
+    especies: ['Tilápia', 'Tucunaré', 'Traíra'],
+    distancia: '3.2 km',
+  },
+  {
+    id: '2',
+    nome: 'Pesqueiro do Zé',
+    cidade: 'Barueri',
+    estado: 'SP',
+    imagem: 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?w=600',
+    descricao: 'Ambiente rústico e acolhedor com peixes de grande porte. Perfeito para quem busca desafio e natureza.',
+    preco: 45,
+    horario: '06:00 - 20:00',
+    avaliacao: 4.5,
+    totalAvaliacoes: 89,
+    categoria: 'Esportivo',
+    especies: ['Dourado', 'Pacu', 'Carpa'],
+    distancia: '7.8 km',
+  },
+  {
+    id: '3',
+    nome: 'Recanto do Pescador',
+    cidade: 'São Paulo',
+    estado: 'SP',
+    imagem: 'https://images.unsplash.com/photo-1504893524553-b855bce32c67?w=600',
+    descricao: 'Pesca noturna liberada com iluminação especial. Estrutura de camping disponível para pernoite.',
+    preco: 55,
+    horario: '00:00 - 23:59',
+    avaliacao: 4.9,
+    totalAvaliacoes: 211,
+    categoria: 'Noturno',
+    especies: ['Pintado', 'Surubim', 'Bagre'],
+    distancia: '12.1 km',
+  },
+  {
+    id: '4',
+    nome: 'Pesqueiro Vale Verde',
+    cidade: 'Carapicuíba',
+    estado: 'SP',
+    imagem: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600',
+    descricao: 'Rodeado de natureza e árvores, perfeito para relaxar enquanto pesca. Ótimo para famílias.',
+    preco: 35,
+    horario: '07:00 - 18:00',
+    avaliacao: 4.6,
+    totalAvaliacoes: 98,
+    categoria: 'Família',
+    especies: ['Tilápia', 'Lambari', 'Traíra'],
+    distancia: '5.4 km',
+  },
+  {
+    id: '5',
+    nome: 'Pesque e Pague Tropical',
+    cidade: 'Santana de Parnaíba',
+    estado: 'SP',
+    imagem: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=600',
+    descricao: 'Estrutura premium com restaurante, lago amplo e monitores especializados para iniciantes.',
+    preco: 60,
+    horario: '06:00 - 18:00',
+    avaliacao: 4.7,
+    totalAvaliacoes: 175,
+    categoria: 'Esportivo',
+    especies: ['Tucunaré', 'Dourado', 'Pacu', 'Carpa'],
+    distancia: '15.0 km',
+  },
+  {
+    id: '6',
+    nome: 'Pesqueiro Águas Claras',
+    cidade: 'Jandira',
+    estado: 'SP',
+    imagem: 'https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?w=600',
+    descricao: 'Água cristalina e peixes abundantes. Ideal para pesca esportiva com competições mensais.',
+    preco: 50,
+    horario: '05:00 - 20:00',
+    avaliacao: 4.4,
+    totalAvaliacoes: 63,
+    categoria: 'Esportivo',
+    especies: ['Surubim', 'Pintado', 'Dourado'],
+    distancia: '9.3 km',
+  },
+  {
+    id: '7',
+    nome: 'Rancho do Peixão',
+    cidade: 'Itapevi',
+    estado: 'SP',
+    imagem: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=600',
+    descricao: 'Ambiente familiar com lago grande e peixes de todos os tamanhos. Churrasqueira disponível.',
+    preco: 25,
+    horario: '08:00 - 17:00',
+    avaliacao: 4.3,
+    totalAvaliacoes: 47,
+    categoria: 'Família',
+    especies: ['Tilápia', 'Carpa', 'Lambari'],
+    distancia: '18.5 km',
+  },
+  {
+    id: '8',
+    nome: 'Pesqueiro Lua Cheia',
+    cidade: 'Osasco',
+    estado: 'SP',
+    imagem: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600',
+    descricao: 'Especializado em pesca noturna com iluminação LED no lago. Experiência única ao luar.',
+    preco: 65,
+    horario: '18:00 - 06:00',
+    avaliacao: 4.9,
+    totalAvaliacoes: 302,
+    categoria: 'Noturno',
+    especies: ['Bagre', 'Traíra', 'Tucunaré', 'Pintado'],
+    distancia: '4.1 km',
+  },
+];

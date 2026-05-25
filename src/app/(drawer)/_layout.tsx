@@ -5,32 +5,21 @@ export default function Layout() {
     <Drawer>
       <Drawer.Screen
         name="dashboard"
-        options={{
-          title: 'Dashboard',
-        }}
+        options={{ title: 'Dashboard' }}
       />
-
-
       <Drawer.Screen
-      name="perfil"
-      options={{
-      title: 'Perfil',
-  }}
-/>
-
-    <Drawer.Screen
-  name="home"
-  options={{
-    title: 'Home',
-  }}
-/>
-
-<Drawer.Screen
-  name="pesqueiros"
-  options={{
-    title: 'Pesqueiros',
-  }}
-/>
+        name="perfil"
+        options={{ title: 'Perfil' }}
+      />
+      <Drawer.Screen
+        name="home"
+        options={{ title: 'Home' }}
+      />
+      <Drawer.Screen
+        name="pesqueiros"
+        options={{ title: 'pesqueiros' }}
+      />
+    
     </Drawer>
   );
 }

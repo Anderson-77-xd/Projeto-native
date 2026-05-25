@@ -49,7 +49,7 @@ export default function Perfil() {
         <View style={styles.topo}>
           <View style={styles.avatarContainer}>
             <Image
-              source={{ uri: 'https://us-prod.asyncgw.teams.microsoft.com/v1/5f9ec355-264e-4409-8aec-9d424a80519d/objects/0-eus-d15-68484e1a7f9f4fcaab0cd6b5ed9764b0/views/imgpsh_fullsize' }}
+              source={require('../../../assets/Foto-perfil.jpg')}
               style={styles.avatar}
             />
             <View style={styles.avatarBadge}>

@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   View,
   Text,
@@ -6,269 +7,359 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  StatusBar,
 } from 'react-native';
-
 import { useRouter } from 'expo-router';
+import { pesqueiros, Pesqueiro } from '../../data/pesqueiros';
+
+const cidadesProximas = ['Barueri', 'Osasco', 'São Paulo', 'Santana de Parnaíba', 'Carapicuíba', 'Jandira', 'Itapevi'];
+const recomendados = [...pesqueiros].sort((a, b) => b.avaliacao - a.avaliacao).slice(0, 5);
+const proximosBarueri = pesqueiros.filter((p) => cidadesProximas.includes(p.cidade));
 
 export default function Home() {
-
   const router = useRouter();
 
-  return (
+  function irParaDetalhes(item: Pesqueiro) {
+    router.push({ pathname: '/detalhes', params: item });
+  }
 
+  return (
     <ScrollView
       style={styles.container}
       showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ paddingBottom: 40 }}
     >
+      <StatusBar barStyle="light-content" backgroundColor="#0a2540" />
 
       {/* HEADER */}
-
       <View style={styles.header}>
-
-        <Text style={styles.ola}>
-          👋 Olá, Usuário
-        </Text>
-
-        <Text style={styles.subtitulo}>
-          Bem-vindo ao app de pesqueiros
-        </Text>
-
+        <Image
+          source={require('../../../assets/logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={styles.appNome}>Smart Fishing</Text>
       </View>
 
       {/* BANNER */}
-
       <ImageBackground
-        source={{
-          uri: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200',
-        }}
-
+        source={{ uri: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200' }}
         style={styles.banner}
-
-        imageStyle={{
-          borderRadius: 25,
-        }}
+        imageStyle={{ borderRadius: 20 }}
       >
-
         <View style={styles.overlay}>
-
-          <Text style={styles.bannerTitle}>
-            🎣 Encontre os melhores lugares para pesca
-          </Text>
-
+          <Text style={styles.bannerTitle}> Encontre os melhores lugares para pesca</Text>
           <TouchableOpacity
             style={styles.bannerButton}
-
-            onPress={() =>
-              router.push('/pesqueiros' as any)
-            }
+            onPress={() => router.push('/pesqueiros' as any)}
           >
-
-            <Text style={styles.bannerButtonText}>
-              Ver Pesqueiros
-            </Text>
-
+            <Text style={styles.bannerButtonText}>Ver Pesqueiros</Text>
           </TouchableOpacity>
-
         </View>
-
       </ImageBackground>
 
-     
+      {/* DESTAQUES — CARROSSEL */}
+      <View style={styles.secaoHeader}>
+        <Text style={styles.sectionTitle}> Destaques</Text>
+        <TouchableOpacity onPress={() => router.push('/pesqueiros' as any)}>
+          <Text style={styles.verTodos}>Ver todos →</Text>
+        </TouchableOpacity>
+      </View>
 
-      {/* DESTAQUES */}
-
-      <Text style={styles.sectionTitle}>
-        🔥 Destaques
-      </Text>
-
-      <TouchableOpacity
-        style={styles.card}
-
-        onPress={() =>
-          router.push('/pesqueiros' as any)
-        }
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.carrosselContent}
       >
+        {pesqueiros.map((item) => (
+          <TouchableOpacity
+            key={item.id}
+            style={styles.carrosselCard}
+            activeOpacity={0.9}
+            onPress={() => irParaDetalhes(item)}
+          >
+            <Image source={{ uri: item.imagem }} style={styles.carrosselImagem} />
+            <View>
+             
+            </View>
+            <View style={styles.carrosselInfo}>
+              <Text style={styles.carrosselNome} numberOfLines={1}>{item.nome}</Text>
+              <Text style={styles.carrosselCidade}> {item.cidade}</Text>
+              <View style={styles.carrosselFooter}>
+                <Text style={styles.carrosselAvaliacao}> {item.avaliacao}</Text>
+                <Text style={styles.carrosselPreco}>R$ {item.preco}</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
 
-        <Image
-          source={{
-            uri: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=500',
-          }}
+      {/* MAIS BEM AVALIADOS */}
+      <View style={styles.secaoHeader}>
+        <Text style={styles.sectionTitle}> Mais bem avaliados</Text>
+      </View>
 
-          style={styles.cardImage}
-        />
+      {recomendados.map((item) => (
+        <TouchableOpacity
+          key={item.id}
+          style={styles.card}
+          activeOpacity={0.9}
+          onPress={() => irParaDetalhes(item)}
+        >
+          <Image source={{ uri: item.imagem }} style={styles.cardImage} />
+          <View style={styles.cardContent}>
+            <View style={styles.cardNomeRow}>
+              <Text style={styles.cardTitle} numberOfLines={1}>{item.nome}</Text>
+              <View style={styles.cardAvaliacaoBox}>
+                <Text style={styles.cardAvaliacao}> {item.avaliacao}</Text>
+              </View>
+            </View>
+            <Text style={styles.cardCidade}> {item.cidade}, {item.estado}</Text>
+            <Text style={styles.cardDescription} numberOfLines={2}>{item.descricao}</Text>
+            <View style={styles.cardFooter}>
+              <Text style={styles.cardPreco}>R$ {item.preco}</Text>
+              <Text style={styles.cardHorario}> {item.horario}</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      ))}
 
-        <View style={styles.cardContent}>
+      {/* PRÓXIMOS A BARUERI */}
+      <View style={styles.secaoHeader}>
+        <Text style={styles.sectionTitle}>Próximos a Barueri</Text>
+      </View>
 
-          <Text style={styles.cardTitle}>
-            Pesqueiro Lago Azul
-          </Text>
-
-          <Text style={styles.cardDescription}>
-            Lugar tranquilo para pesca com família
-          </Text>
-
-        </View>
-
-      </TouchableOpacity>
-
-      {/* RECOMENDADOS */}
-
-      <Text style={styles.sectionTitle}>
-        ⭐ Recomendados
-      </Text>
-
-      <TouchableOpacity
-        style={styles.card}
-
-        onPress={() =>
-          router.push('/pesqueiros' as any)
-        }
-      >
-
-        <Image
-          source={{
-            uri: 'https://images.unsplash.com/photo-1504893524553-b855bce32c67?w=500',
-          }}
-
-          style={styles.cardImage}
-        />
-
-        <View style={styles.cardContent}>
-
-          <Text style={styles.cardTitle}>
-            Recanto do Pescador
-          </Text>
-
-          <Text style={styles.cardDescription}>
-            Ótimo ambiente para pescaria esportiva
-          </Text>
-
-        </View>
-
-      </TouchableOpacity>
+      {proximosBarueri.map((item) => (
+        <TouchableOpacity
+          key={item.id}
+          style={styles.card}
+          activeOpacity={0.9}
+          onPress={() => irParaDetalhes(item)}
+        >
+          <Image source={{ uri: item.imagem }} style={styles.cardImage} />
+          <View style={styles.cardContent}>
+            <View style={styles.cardNomeRow}>
+              <Text style={styles.cardTitle} numberOfLines={1}>{item.nome}</Text>
+              <View style={styles.cardAvaliacaoBox}>
+                <Text style={styles.cardAvaliacao}> {item.avaliacao}</Text>
+              </View>
+            </View>
+            <Text style={styles.cardCidade}> {item.cidade}, {item.estado} · {item.distancia}</Text>
+            <Text style={styles.cardDescription} numberOfLines={2}>{item.descricao}</Text>
+            <View style={styles.cardFooter}>
+              <Text style={styles.cardPreco}>R$ {item.preco}</Text>
+              <Text style={styles.cardHorario}> {item.horario}</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      ))}
 
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
-    backgroundColor: '#062d5a',
-    paddingHorizontal: 20,
+    backgroundColor: '#0a2540',
+    paddingHorizontal: 16,
   },
 
+  // HEADER
   header: {
-    marginTop: 20,
-    marginBottom: 25,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 20,
+    marginBottom: 20,
+    position: 'relative',
   },
-
-  ola: {
-    color: '#fff',
-    fontSize: 30,
-    fontWeight: 'bold',
+  logo: {
+    width: 52,
+    height: 52,
+    position: 'absolute',
+    left: 0,
   },
-
-  subtitulo: {
-    color: '#B8C7E0',
-    marginTop: 5,
-    fontSize: 16,
-  },
-
-  banner: {
-    height: 230,
-    justifyContent: 'flex-end',
-    marginBottom: 30,
-  },
-
-  overlay: {
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    padding: 20,
-    borderRadius: 25,
-  },
-
-  bannerTitle: {
+  appNome: {
     color: '#fff',
     fontSize: 24,
     fontWeight: 'bold',
-    lineHeight: 34,
+    textAlign: 'center',
   },
 
-  bannerButton: {
-    backgroundColor: '#0B3B78',
-    marginTop: 20,
-    paddingVertical: 12,
-    borderRadius: 15,
-    alignItems: 'center',
+  // BANNER
+  banner: {
+    height: 220,
+    justifyContent: 'flex-end',
+    marginBottom: 24,
   },
-
-  bannerButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-
-  sectionTitle: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 15,
-  },
-
-  categoria: {
-    backgroundColor: '#0B3B78',
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    borderRadius: 30,
-    marginRight: 10,
-    marginBottom: 30,
-  },
-
-  categoriaText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-
-  card: {
-    backgroundColor: '#0B3B78',
+  overlay: {
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    padding: 18,
     borderRadius: 20,
-    overflow: 'hidden',
-    marginBottom: 25,
-
-    shadowColor: '#000',
-
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-
-    shadowOpacity: 0.3,
-
-    shadowRadius: 4,
-
-    elevation: 5,
   },
-
-  cardImage: {
-    width: '100%',
-    height: 180,
-  },
-
-  cardContent: {
-    padding: 15,
-  },
-
-  cardTitle: {
+  bannerTitle: {
     color: '#fff',
     fontSize: 20,
     fontWeight: 'bold',
+    lineHeight: 28,
+  },
+  bannerButton: {
+    backgroundColor: '#4ADE80',
+    marginTop: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  bannerButtonText: {
+    color: '#0a2540',
+    fontSize: 15,
+    fontWeight: 'bold',
   },
 
+  // SEÇÃO
+  secaoHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  sectionTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  verTodos: {
+    color: '#4ADE80',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  // CARROSSEL
+  carrosselContent: {
+    paddingBottom: 20,
+    gap: 12,
+  },
+  carrosselCard: {
+    width: 200,
+    backgroundColor: '#112e50',
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#1e4d7a',
+  },
+  carrosselImagem: {
+    width: '100%',
+    height: 120,
+  },
+  carrosselCategoriaTag: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: '#4ADE80',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 20,
+  },
+  carrosselCategoriaText: {
+    color: '#0a2540',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  carrosselInfo: {
+    padding: 10,
+  },
+  carrosselNome: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  carrosselCidade: {
+    color: '#7aabcc',
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  carrosselFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  carrosselAvaliacao: {
+    color: '#f59e0b',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  carrosselPreco: {
+    color: '#4ADE80',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+
+  // CARDS
+  card: {
+    backgroundColor: '#112e50',
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#1e4d7a',
+  },
+  cardImage: {
+    width: '100%',
+    height: 160,
+  },
+  cardContent: {
+    padding: 14,
+  },
+  cardNomeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  cardTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    flex: 1,
+    marginRight: 8,
+  },
+  cardAvaliacaoBox: {
+    backgroundColor: '#1a6632',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  cardAvaliacao: {
+    color: '#4ADE80',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  cardCidade: {
+    color: '#7aabcc',
+    fontSize: 12,
+    marginBottom: 6,
+  },
   cardDescription: {
-    color: '#D6E4F0',
-    marginTop: 8,
-    lineHeight: 22,
+    color: '#b8d4e8',
+    fontSize: 13,
+    lineHeight: 20,
+    marginBottom: 10,
   },
-
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#1e4d7a',
+  },
+  cardPreco: {
+    color: '#4ADE80',
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  cardHorario: {
+    color: '#b8d4e8',
+    fontSize: 12,
+  },
 });
