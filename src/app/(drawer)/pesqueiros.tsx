@@ -1,147 +1,47 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
+  ActivityIndicator,
   Image,
   ScrollView,
   StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { pesqueiros as pesqueirosLocais, Pesqueiro } from '../../data/pesqueiros';
+import { listarPesqueiros } from '../../services/api';
 
-const categorias = ['Todos', 'Família', 'Esportivo', 'Noturno'];
-
-const listaPesqueiros = [
-  {
-    id: '1',
-    nome: 'Pesqueiro Lago Azul',
-    cidade: 'Osasco',
-    estado: 'SP',
-    imagem: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600',
-    descricao: 'Lago bem cuidado, ideal para pesca em família com crianças.',
-    preco: 30,
-    horario: '08:00 - 18:00',
-    avaliacao: 4.8,
-    totalAvaliacoes: 124,
-    categoria: '',
-    especies: ['Tilápia', 'Tucunaré', 'Traíra'],
-    distancia: '3.2 km',
-  },
-  {
-    id: '2',
-    nome: 'Pesqueiro do Zé',
-    cidade: 'Barueri',
-    estado: 'SP',
-    imagem: 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?w=600',
-    descricao: 'Ambiente rústico com peixes de grande porte. Perfeito para desafio e natureza.',
-    preco: 45,
-    horario: '06:00 - 20:00',
-    avaliacao: 4.5,
-    totalAvaliacoes: 89,
-    categoria: '',
-    especies: ['Dourado', 'Pacu', 'Carpa'],
-    distancia: '7.8 km',
-  },
-  {
-    id: '3',
-    nome: 'Recanto do Pescador',
-    cidade: 'São Paulo',
-    estado: 'SP',
-    imagem: 'https://images.unsplash.com/photo-1504893524553-b855bce32c67?w=600',
-    descricao: 'Pesca noturna com iluminação especial. Camping disponível para pernoite.',
-    preco: 55,
-    horario: '00:00 - 23:59',
-    avaliacao: 4.9,
-    totalAvaliacoes: 211,
-    categoria: '',
-    especies: ['Pintado', 'Surubim', 'Bagre'],
-    distancia: '12.1 km',
-  },
-  {
-    id: '4',
-    nome: 'Pesqueiro Vale Verde',
-    cidade: 'Carapicuíba',
-    estado: 'SP',
-    imagem: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600',
-    descricao: 'Rodeado de natureza e árvores, perfeito para relaxar enquanto pesca.',
-    preco: 35,
-    horario: '07:00 - 18:00',
-    avaliacao: 4.6,
-    totalAvaliacoes: 98,
-    categoria: '',
-    especies: ['Tilápia', 'Lambari', 'Traíra'],
-    distancia: '5.4 km',
-  },
-  {
-    id: '5',
-    nome: 'Pesque e Pague Tropical',
-    cidade: 'Santana de Parnaíba',
-    estado: 'SP',
-    imagem: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=600',
-    descricao: 'Estrutura premium com restaurante, lago amplo e monitores especializados.',
-    preco: 60,
-    horario: '06:00 - 18:00',
-    avaliacao: 4.7,
-    totalAvaliacoes: 175,
-    categoria: '',
-    especies: ['Tucunaré', 'Dourado', 'Pacu', 'Carpa'],
-    distancia: '15.0 km',
-  },
-  {
-    id: '6',
-    nome: 'Pesqueiro Águas Claras',
-    cidade: 'Jandira',
-    estado: 'SP',
-    imagem: 'https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?w=600',
-    descricao: 'Água cristalina e peixes abundantes. Ideal para pesca esportiva.',
-    preco: 50,
-    horario: '05:00 - 20:00',
-    avaliacao: 4.4,
-    totalAvaliacoes: 63,
-    categoria: '',
-    especies: ['Surubim', 'Pintado', 'Dourado'],
-    distancia: '9.3 km',
-  },
-  {
-    id: '7',
-    nome: 'Rancho do Peixão',
-    cidade: 'Itapevi',
-    estado: 'SP',
-    imagem: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=600',
-    descricao: 'Ambiente familiar com lago grande. Churrasqueira disponível.',
-    preco: 25,
-    horario: '08:00 - 17:00',
-    avaliacao: 4.3,
-    totalAvaliacoes: 47,
-    categoria: '',
-    especies: ['Tilápia', 'Carpa', 'Lambari'],
-    distancia: '18.5 km',
-  },
-  {
-    id: '8',
-    nome: 'Pesqueiro Lua Cheia',
-    cidade: 'Osasco',
-    estado: 'SP',
-    imagem: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600',
-    descricao: 'Pesca noturna com iluminação LED no lago. Experiência única ao luar.',
-    preco: 65,
-    horario: '18:00 - 06:00',
-    avaliacao: 4.9,
-    totalAvaliacoes: 302,
-    categoria: '',
-    especies: ['Bagre', 'Traíra', 'Tucunaré', 'Pintado'],
-    distancia: '4.1 km',
-  },
-];
+const categorias = ['Todos', 'Família', 'Esportivo', 'Noturno', 'Inativo'];
 
 export default function Pesqueiros() {
   const router = useRouter();
   const [busca, setBusca] = useState('');
   const [categoriaSelecionada, setCategoriaSelecionada] = useState('Todos');
+  const [pesqueiros, setPesqueiros] = useState<Pesqueiro[]>(pesqueirosLocais);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState('');
 
-  const filtrados = listaPesqueiros.filter((p) => {
+  useEffect(() => {
+    async function carregarPesqueiros() {
+      try {
+        const dados = await listarPesqueiros();
+        setPesqueiros(dados.length > 0 ? dados : pesqueirosLocais);
+        setErro('');
+      } catch {
+        setPesqueiros(pesqueirosLocais);
+        setErro('API offline. Mostrando dados locais.');
+      } finally {
+        setCarregando(false);
+      }
+    }
+
+    carregarPesqueiros();
+  }, []);
+
+  const filtrados = pesqueiros.filter((p) => {
     const matchCategoria =
       categoriaSelecionada === 'Todos' || p.categoria === categoriaSelecionada;
     const matchBusca =
@@ -162,7 +62,6 @@ export default function Pesqueiros() {
       <StatusBar barStyle="light-content" backgroundColor="#0a2540" />
 
       <ScrollView showsVerticalScrollIndicator={false}>
-
         <TextInput
           style={styles.searchInput}
           placeholder="Buscar pesqueiro ou cidade..."
@@ -189,6 +88,9 @@ export default function Pesqueiros() {
           ))}
         </ScrollView>
 
+        {carregando && <ActivityIndicator color="#4ADE80" style={styles.loading} />}
+        {erro !== '' && <Text style={styles.aviso}>{erro}</Text>}
+
         <Text style={styles.resultado}>
           {filtrados.length} pesqueiro{filtrados.length !== 1 ? 's' : ''} encontrado{filtrados.length !== 1 ? 's' : ''}
         </Text>
@@ -206,7 +108,7 @@ export default function Pesqueiros() {
                 <Text style={styles.categoriaTagText}>{item.categoria}</Text>
               </View>
               <View style={styles.distanciaTag}>
-                <Text style={styles.distanciaText}> {item.distancia}</Text>
+                <Text style={styles.distanciaText}>{item.distancia}</Text>
               </View>
             </View>
 
@@ -224,7 +126,6 @@ export default function Pesqueiros() {
               </Text>
 
               <Text style={styles.cidade}>{item.cidade}, {item.estado}</Text>
-
               <Text style={styles.descricao} numberOfLines={2}>{item.descricao}</Text>
 
               <View style={styles.especiesRow}>
@@ -240,7 +141,7 @@ export default function Pesqueiros() {
                   <Text style={styles.precoLabel}>Diária</Text>
                   <Text style={styles.preco}>R$ {item.preco}</Text>
                 </View>
-                <Text style={styles.horario}> {item.horario}</Text>
+                <Text style={styles.horario}>{item.horario}</Text>
                 <TouchableOpacity
                   style={styles.verBtn}
                   onPress={() => router.push({ pathname: '/detalhes', params: item })}
@@ -254,7 +155,6 @@ export default function Pesqueiros() {
 
         {filtrados.length === 0 && (
           <View style={styles.vazio}>
-            <Text style={styles.vazioIcone}></Text>
             <Text style={styles.vazioText}>Nenhum pesqueiro encontrado</Text>
           </View>
         )}
@@ -307,6 +207,14 @@ const styles = StyleSheet.create({
   },
   tagTextAtivo: {
     color: '#0a2540',
+  },
+  loading: {
+    marginBottom: 12,
+  },
+  aviso: {
+    color: '#fbbf24',
+    fontSize: 12,
+    marginBottom: 10,
   },
   resultado: {
     color: '#7aabcc',
@@ -457,10 +365,6 @@ const styles = StyleSheet.create({
   vazio: {
     alignItems: 'center',
     paddingTop: 60,
-  },
-  vazioIcone: {
-    fontSize: 48,
-    marginBottom: 12,
   },
   vazioText: {
     color: '#7aabcc',

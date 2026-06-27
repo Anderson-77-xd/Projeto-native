@@ -1,15 +1,18 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
   Image,
-  ScrollView,
-  TouchableOpacity,
-  StatusBar,
   Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
+import { Usuario } from '../../services/api';
 
 const estatisticas = [
   { valor: '47', label: 'Capturas' },
@@ -23,18 +26,90 @@ const historico = [
   { id: '3', local: 'Recanto do Pescador', data: '02/05/2026', peixe: 'Pintado', peso: '6.8 kg' },
 ];
 
+const usuarioPadrao: Usuario = {
+  nome: 'Usuário Smart Fishing',
+  email: 'sem-login@smartfishing.com',
+  nivelAcesso: 'CLIENTE',
+  statusUsuario: true,
+};
+
+function chaveFotoPerfil(email: string) {
+  return `@smartfishing:fotoPerfil:${email}`;
+}
+
 export default function Perfil() {
   const router = useRouter();
+  const [usuario, setUsuario] = useState<Usuario>(usuarioPadrao);
+  const [fotoPerfil, setFotoPerfil] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function carregarPerfil() {
+      const usuarioSalvo = await AsyncStorage.getItem('@smartfishing:usuario');
+      const usuarioAtual = usuarioSalvo ? JSON.parse(usuarioSalvo) as Usuario : usuarioPadrao;
+      const fotoSalva = await AsyncStorage.getItem(chaveFotoPerfil(usuarioAtual.email));
+
+      setUsuario(usuarioAtual);
+      setFotoPerfil(fotoSalva);
+    }
+
+    carregarPerfil();
+  }, []);
+
+  function alerta(titulo: string, mensagem: string) {
+    if (Platform.OS === 'web') {
+      window.alert(mensagem);
+    } else {
+      const { Alert } = require('react-native');
+      Alert.alert(titulo, mensagem);
+    }
+  }
+
+  async function trocarFotoPerfil() {
+    if (Platform.OS !== 'web') {
+      const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permissao.granted) {
+        alerta('Permissão necessária', 'Permita o acesso à galeria para trocar sua foto.');
+        return;
+      }
+    }
+
+    const resultado = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.75,
+    });
+
+    if (resultado.canceled) {
+      return;
+    }
+
+    const uri = resultado.assets[0]?.uri;
+
+    if (!uri) {
+      alerta('Erro', 'Não foi possível carregar a imagem selecionada.');
+      return;
+    }
+
+    setFotoPerfil(uri);
+    await AsyncStorage.setItem(chaveFotoPerfil(usuario.email), uri);
+  }
+
+  async function sairDaConta() {
+    await AsyncStorage.removeItem('@smartfishing:usuario');
+    router.replace('/');
+  }
 
   function handleSair() {
     if (Platform.OS === 'web') {
       window.alert('Você saiu da conta.');
-      router.replace('/');
+      sairDaConta();
     } else {
       const { Alert } = require('react-native');
       Alert.alert('Sair', 'Deseja sair da sua conta?', [
         { text: 'Cancelar', style: 'cancel' },
-        { text: 'Sair', onPress: () => router.replace('/') },
+        { text: 'Sair', onPress: sairDaConta },
       ]);
     }
   }
@@ -44,24 +119,32 @@ export default function Perfil() {
       <StatusBar barStyle="light-content" backgroundColor="#0a2540" />
 
       <ScrollView showsVerticalScrollIndicator={false}>
-
-        {/* AVATAR E NOME */}
         <View style={styles.topo}>
           <View style={styles.avatarContainer}>
             <Image
-              source={require('../../../assets/Foto-perfil.jpg')}
+              source={fotoPerfil ? { uri: fotoPerfil } : require('../../../assets/Foto-perfil.jpg')}
               style={styles.avatar}
             />
-            <View style={styles.avatarBadge}>
-              <Text style={styles.avatarBadgeText}></Text>
-            </View>
+            <TouchableOpacity
+              style={styles.avatarBadge}
+              onPress={trocarFotoPerfil}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.avatarBadgeText}>+</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={styles.nome}>João Pescador</Text>
-          <Text style={styles.email}>joao@email.com</Text>
-          <Text style={styles.cidade}> Osasco, SP</Text>
+          <TouchableOpacity
+            style={styles.btnTrocarFoto}
+            onPress={trocarFotoPerfil}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.btnTrocarFotoText}>Trocar foto</Text>
+          </TouchableOpacity>
+          <Text style={styles.nome}>{usuario.nome}</Text>
+          <Text style={styles.email}>{usuario.email}</Text>
+          <Text style={styles.cidade}>{usuario.nivelAcesso ?? 'CLIENTE'}</Text>
         </View>
 
-        {/* ESTATÍSTICAS */}
         <View style={styles.statsRow}>
           {estatisticas.map((e, i) => (
             <View key={i} style={styles.statCard}>
@@ -71,50 +154,30 @@ export default function Perfil() {
           ))}
         </View>
 
-        {/* INFORMAÇÕES */}
         <View style={styles.secao}>
           <Text style={styles.secaoTitulo}>Informações</Text>
 
-          <View style={styles.infoRow}>
-            <Text style={styles.infoIcone}></Text>
-            <View>
-              <Text style={styles.infoLabel}>Nome</Text>
-              <Text style={styles.infoValor}>João Pescador</Text>
-            </View>
-          </View>
-
+          <InfoRow label="Nome" value={usuario.nome} />
           <View style={styles.divisor} />
 
-          <View style={styles.infoRow}>
-            <Text style={styles.infoIcone}></Text>
-            <View>
-              <Text style={styles.infoLabel}>E-mail</Text>
-              <Text style={styles.infoValor}>joao@email.com</Text>
-            </View>
-          </View>
-
+          <InfoRow label="E-mail" value={usuario.email} />
           <View style={styles.divisor} />
 
-          <View style={styles.infoRow}>
-            <Text style={styles.infoIcone}></Text>
-            <View>
-              <Text style={styles.infoLabel}>Telefone</Text>
-              <Text style={styles.infoValor}>(11) 99999-9999</Text>
-            </View>
-          </View>
-
+          <InfoRow label="Nível de acesso" value={usuario.nivelAcesso ?? 'CLIENTE'} />
           <View style={styles.divisor} />
 
-          <View style={styles.infoRow}>
-            <Text style={styles.infoIcone}></Text>
-            <View>
-              <Text style={styles.infoLabel}>Cidade</Text>
-              <Text style={styles.infoValor}>Osasco, SP</Text>
-            </View>
-          </View>
+          <InfoRow
+            label="Status"
+            value={usuario.statusUsuario === false ? 'Inativo' : 'Ativo'}
+          />
+          {usuario.dataCadastro && (
+            <>
+              <View style={styles.divisor} />
+              <InfoRow label="Cadastro" value={usuario.dataCadastro} />
+            </>
+          )}
         </View>
 
-        {/* HISTÓRICO */}
         <View style={styles.secao}>
           <Text style={styles.secaoTitulo}>Últimas pescarias</Text>
 
@@ -124,9 +187,9 @@ export default function Perfil() {
                 <View style={styles.historicoIcone}>
                   <Text style={{ fontSize: 20 }}></Text>
                 </View>
-                <View style={{ flex: 1}}>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.historicoLocal}>{h.local}</Text>
-                  <Text style={styles.historicoMeta}>{h.peixe}  {}</Text>
+                  <Text style={styles.historicoMeta}>{h.peixe} · {h.peso}</Text>
                 </View>
                 <Text style={styles.historicoData}>{h.data}</Text>
               </View>
@@ -135,7 +198,6 @@ export default function Perfil() {
           ))}
         </View>
 
-        {/* BOTÃO SAIR */}
         <TouchableOpacity style={styles.btnSair} onPress={handleSair}>
           <Text style={styles.btnSairText}>Sair da conta</Text>
         </TouchableOpacity>
@@ -146,13 +208,23 @@ export default function Perfil() {
   );
 }
 
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.infoRow}>
+      <Text style={styles.infoIcone}></Text>
+      <View>
+        <Text style={styles.infoLabel}>{label}</Text>
+        <Text style={styles.infoValor}>{value}</Text>
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0a2540',
   },
-
-  // TOPO
   topo: {
     alignItems: 'center',
     paddingTop: 30,
@@ -160,7 +232,7 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     position: 'relative',
-    marginBottom: 14,
+    marginBottom: 10,
   },
   avatar: {
     width: 100,
@@ -173,7 +245,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#112e50',
+    backgroundColor: '#4ADE80',
     borderRadius: 20,
     width: 32,
     height: 32,
@@ -183,7 +255,24 @@ const styles = StyleSheet.create({
     borderColor: '#0a2540',
   },
   avatarBadgeText: {
-    fontSize: 16,
+    color: '#0a2540',
+    fontSize: 22,
+    fontWeight: 'bold',
+    lineHeight: 24,
+  },
+  btnTrocarFoto: {
+    backgroundColor: '#112e50',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#1e4d7a',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    marginBottom: 14,
+  },
+  btnTrocarFotoText: {
+    color: '#4ADE80',
+    fontSize: 12,
+    fontWeight: '700',
   },
   nome: {
     color: '#fff',
@@ -200,8 +289,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 6,
   },
-
-  // STATS
   statsRow: {
     flexDirection: 'row',
     paddingHorizontal: 16,
@@ -227,8 +314,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 3,
   },
-
-  // SEÇÃO
   secao: {
     backgroundColor: '#112e50',
     borderRadius: 16,
@@ -244,8 +329,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
   },
-
-  // INFO
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -271,8 +354,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#1e4d7a',
     marginVertical: 12,
   },
-
-  // HISTÓRICO
   historicoRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -300,8 +381,6 @@ const styles = StyleSheet.create({
     color: '#4a7a96',
     fontSize: 11,
   },
-
-  // BOTÃO SAIR
   btnSair: {
     marginHorizontal: 16,
     borderRadius: 12,

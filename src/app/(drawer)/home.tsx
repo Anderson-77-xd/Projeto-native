@@ -1,23 +1,52 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ImageBackground,
-  TouchableOpacity,
-  ScrollView,
+  ActivityIndicator,
   Image,
+  ImageBackground,
+  ScrollView,
   StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { pesqueiros, Pesqueiro } from '../../data/pesqueiros';
+import { pesqueiros as pesqueirosLocais, Pesqueiro } from '../../data/pesqueiros';
+import { listarPesqueiros } from '../../services/api';
 
 const cidadesProximas = ['Barueri', 'Osasco', 'São Paulo', 'Santana de Parnaíba', 'Carapicuíba', 'Jandira', 'Itapevi'];
-const recomendados = [...pesqueiros].sort((a, b) => b.avaliacao - a.avaliacao).slice(0, 5);
-const proximosBarueri = pesqueiros.filter((p) => cidadesProximas.includes(p.cidade));
 
 export default function Home() {
   const router = useRouter();
+  const [pesqueiros, setPesqueiros] = useState<Pesqueiro[]>(pesqueirosLocais);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState('');
+
+  useEffect(() => {
+    async function carregarPesqueiros() {
+      try {
+        const dados = await listarPesqueiros();
+        setPesqueiros(dados.length > 0 ? dados : pesqueirosLocais);
+        setErro('');
+      } catch {
+        setPesqueiros(pesqueirosLocais);
+        setErro('API offline. Mostrando dados locais.');
+      } finally {
+        setCarregando(false);
+      }
+    }
+
+    carregarPesqueiros();
+  }, []);
+
+  const recomendados = useMemo(
+    () => [...pesqueiros].sort((a, b) => b.avaliacao - a.avaliacao).slice(0, 5),
+    [pesqueiros]
+  );
+  const proximosBarueri = useMemo(
+    () => pesqueiros.filter((p) => cidadesProximas.includes(p.cidade)),
+    [pesqueiros]
+  );
 
   function irParaDetalhes(item: Pesqueiro) {
     router.push({ pathname: '/detalhes', params: item });
@@ -31,7 +60,6 @@ export default function Home() {
     >
       <StatusBar barStyle="light-content" backgroundColor="#0a2540" />
 
-      {/* HEADER */}
       <View style={styles.header}>
         <Image
           source={require('../../../assets/logo.png')}
@@ -41,14 +69,16 @@ export default function Home() {
         <Text style={styles.appNome}>Smart Fishing</Text>
       </View>
 
-      {/* BANNER */}
+      {carregando && <ActivityIndicator color="#4ADE80" style={styles.loading} />}
+      {erro !== '' && <Text style={styles.aviso}>{erro}</Text>}
+
       <ImageBackground
         source={{ uri: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200' }}
         style={styles.banner}
         imageStyle={{ borderRadius: 20 }}
       >
         <View style={styles.overlay}>
-          <Text style={styles.bannerTitle}> Encontre os melhores lugares para pesca</Text>
+          <Text style={styles.bannerTitle}>Encontre os melhores lugares para pesca</Text>
           <TouchableOpacity
             style={styles.bannerButton}
             onPress={() => router.push('/pesqueiros' as any)}
@@ -58,9 +88,8 @@ export default function Home() {
         </View>
       </ImageBackground>
 
-      {/* DESTAQUES — CARROSSEL */}
       <View style={styles.secaoHeader}>
-        <Text style={styles.sectionTitle}> Destaques</Text>
+        <Text style={styles.sectionTitle}>Destaques</Text>
         <TouchableOpacity onPress={() => router.push('/pesqueiros' as any)}>
           <Text style={styles.verTodos}>Ver todos →</Text>
         </TouchableOpacity>
@@ -79,14 +108,11 @@ export default function Home() {
             onPress={() => irParaDetalhes(item)}
           >
             <Image source={{ uri: item.imagem }} style={styles.carrosselImagem} />
-            <View>
-             
-            </View>
             <View style={styles.carrosselInfo}>
               <Text style={styles.carrosselNome} numberOfLines={1}>{item.nome}</Text>
-              <Text style={styles.carrosselCidade}> {item.cidade}</Text>
+              <Text style={styles.carrosselCidade}>{item.cidade}</Text>
               <View style={styles.carrosselFooter}>
-                <Text style={styles.carrosselAvaliacao}> {item.avaliacao}</Text>
+                <Text style={styles.carrosselAvaliacao}>{item.avaliacao}</Text>
                 <Text style={styles.carrosselPreco}>R$ {item.preco}</Text>
               </View>
             </View>
@@ -94,67 +120,44 @@ export default function Home() {
         ))}
       </ScrollView>
 
-      {/* MAIS BEM AVALIADOS */}
       <View style={styles.secaoHeader}>
-        <Text style={styles.sectionTitle}> Mais bem avaliados</Text>
+        <Text style={styles.sectionTitle}>Mais bem avaliados</Text>
       </View>
 
       {recomendados.map((item) => (
-        <TouchableOpacity
-          key={item.id}
-          style={styles.card}
-          activeOpacity={0.9}
-          onPress={() => irParaDetalhes(item)}
-        >
-          <Image source={{ uri: item.imagem }} style={styles.cardImage} />
-          <View style={styles.cardContent}>
-            <View style={styles.cardNomeRow}>
-              <Text style={styles.cardTitle} numberOfLines={1}>{item.nome}</Text>
-              <View style={styles.cardAvaliacaoBox}>
-                <Text style={styles.cardAvaliacao}> {item.avaliacao}</Text>
-              </View>
-            </View>
-            <Text style={styles.cardCidade}> {item.cidade}, {item.estado}</Text>
-            <Text style={styles.cardDescription} numberOfLines={2}>{item.descricao}</Text>
-            <View style={styles.cardFooter}>
-              <Text style={styles.cardPreco}>R$ {item.preco}</Text>
-              <Text style={styles.cardHorario}> {item.horario}</Text>
-            </View>
-          </View>
-        </TouchableOpacity>
+        <CardPesqueiro key={item.id} item={item} onPress={() => irParaDetalhes(item)} />
       ))}
 
-      {/* PRÓXIMOS A BARUERI */}
       <View style={styles.secaoHeader}>
         <Text style={styles.sectionTitle}>Próximos a Barueri</Text>
       </View>
 
-      {proximosBarueri.map((item) => (
-        <TouchableOpacity
-          key={item.id}
-          style={styles.card}
-          activeOpacity={0.9}
-          onPress={() => irParaDetalhes(item)}
-        >
-          <Image source={{ uri: item.imagem }} style={styles.cardImage} />
-          <View style={styles.cardContent}>
-            <View style={styles.cardNomeRow}>
-              <Text style={styles.cardTitle} numberOfLines={1}>{item.nome}</Text>
-              <View style={styles.cardAvaliacaoBox}>
-                <Text style={styles.cardAvaliacao}> {item.avaliacao}</Text>
-              </View>
-            </View>
-            <Text style={styles.cardCidade}> {item.cidade}, {item.estado} · {item.distancia}</Text>
-            <Text style={styles.cardDescription} numberOfLines={2}>{item.descricao}</Text>
-            <View style={styles.cardFooter}>
-              <Text style={styles.cardPreco}>R$ {item.preco}</Text>
-              <Text style={styles.cardHorario}> {item.horario}</Text>
-            </View>
-          </View>
-        </TouchableOpacity>
+      {(proximosBarueri.length > 0 ? proximosBarueri : pesqueiros.slice(0, 3)).map((item) => (
+        <CardPesqueiro key={item.id} item={item} onPress={() => irParaDetalhes(item)} />
       ))}
-
     </ScrollView>
+  );
+}
+
+function CardPesqueiro({ item, onPress }: { item: Pesqueiro; onPress: () => void }) {
+  return (
+    <TouchableOpacity style={styles.card} activeOpacity={0.9} onPress={onPress}>
+      <Image source={{ uri: item.imagem }} style={styles.cardImage} />
+      <View style={styles.cardContent}>
+        <View style={styles.cardNomeRow}>
+          <Text style={styles.cardTitle} numberOfLines={1}>{item.nome}</Text>
+          <View style={styles.cardAvaliacaoBox}>
+            <Text style={styles.cardAvaliacao}>{item.avaliacao}</Text>
+          </View>
+        </View>
+        <Text style={styles.cardCidade}>{item.cidade}, {item.estado} · {item.distancia}</Text>
+        <Text style={styles.cardDescription} numberOfLines={2}>{item.descricao}</Text>
+        <View style={styles.cardFooter}>
+          <Text style={styles.cardPreco}>R$ {item.preco}</Text>
+          <Text style={styles.cardHorario}>{item.horario}</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
   );
 }
 
@@ -164,8 +167,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#0a2540',
     paddingHorizontal: 16,
   },
-
-  // HEADER
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -186,8 +187,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-
-  // BANNER
+  loading: {
+    marginBottom: 12,
+  },
+  aviso: {
+    color: '#fbbf24',
+    fontSize: 12,
+    marginBottom: 12,
+  },
   banner: {
     height: 220,
     justifyContent: 'flex-end',
@@ -216,8 +223,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
   },
-
-  // SEÇÃO
   secaoHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -234,8 +239,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
-
-  // CARROSSEL
   carrosselContent: {
     paddingBottom: 20,
     gap: 12,
@@ -251,20 +254,6 @@ const styles = StyleSheet.create({
   carrosselImagem: {
     width: '100%',
     height: 120,
-  },
-  carrosselCategoriaTag: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    backgroundColor: '#4ADE80',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 20,
-  },
-  carrosselCategoriaText: {
-    color: '#0a2540',
-    fontSize: 10,
-    fontWeight: 'bold',
   },
   carrosselInfo: {
     padding: 10,
@@ -294,8 +283,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-
-  // CARDS
   card: {
     backgroundColor: '#112e50',
     borderRadius: 16,

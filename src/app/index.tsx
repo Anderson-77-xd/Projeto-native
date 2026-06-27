@@ -1,41 +1,57 @@
 import React, { useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
+  Image,
+  Platform,
+  StatusBar,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Image,
-  StatusBar,
-  Platform,
+  View,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import { loginUsuario } from '../services/api';
 
 export default function Login() {
   const router = useRouter();
-  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [senhaVisivel, setSenhaVisivel] = useState(false);
+  const [carregando, setCarregando] = useState(false);
 
-  function handleLogin() {
-    if (name.trim() === '' || senha.trim() === '') {
-      if (Platform.OS === 'web') {
-        window.alert('Preencha todos os campos.');
-      } else {
-        const { Alert } = require('react-native');
-        Alert.alert('Atenção', 'Preencha todos os campos.');
-      }
+  function alerta(titulo: string, mensagem: string) {
+    if (Platform.OS === 'web') {
+      window.alert(mensagem);
+    } else {
+      const { Alert } = require('react-native');
+      Alert.alert(titulo, mensagem);
+    }
+  }
+
+  async function handleLogin() {
+    if (email.trim() === '' || senha.trim() === '') {
+      alerta('Atenção', 'Preencha todos os campos.');
       return;
     }
 
-    router.push('/(drawer)/home' as any);
+    try {
+      setCarregando(true);
+      const usuario = await loginUsuario(email.trim(), senha);
+      await AsyncStorage.setItem('@smartfishing:usuario', JSON.stringify(usuario));
+      router.replace('/(drawer)/home' as any);
+    } catch (error) {
+      alerta('Erro no login', error instanceof Error ? error.message : 'Não foi possível entrar.');
+    } finally {
+      setCarregando(false);
+    }
   }
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0a2540" />
 
-      {/* LOGO E TÍTULO */}
       <View style={styles.topo}>
         <Image
           source={require('../../assets/logo.png')}
@@ -46,14 +62,13 @@ export default function Login() {
         <Text style={styles.subtitulo}>Faça login para continuar</Text>
       </View>
 
-      {/* CAMPOS */}
-      <Text style={styles.label}>Nome</Text>
+      <Text style={styles.label}>E-mail</Text>
       <TextInput
         style={styles.input}
-        placeholder="seu nome"
+        placeholder="seu@email.com"
         placeholderTextColor="#4a7a96"
-        value={name}
-        onChangeText={setName}
+        value={email}
+        onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
       />
@@ -76,19 +91,19 @@ export default function Login() {
         </TouchableOpacity>
       </View>
 
-      {/* BOTÃO ENTRAR */}
-      <TouchableOpacity style={styles.btnEntrar} onPress={handleLogin}>
-        <Text style={styles.btnEntrarText}>Entrar</Text>
+      <TouchableOpacity style={styles.btnEntrar} onPress={handleLogin} disabled={carregando}>
+        {carregando ? (
+          <ActivityIndicator color="#0a2540" />
+        ) : (
+          <Text style={styles.btnEntrarText}>Entrar</Text>
+        )}
       </TouchableOpacity>
 
-      {/* CADASTRO */}
       <TouchableOpacity style={styles.btnCadastro} onPress={() => router.push('/cadastro')}>
         <Text style={styles.btnCadastroText}>
-          Não tem conta?{' '}
-          <Text style={styles.destaque}>Criar conta</Text>
+          Não tem conta? <Text style={styles.destaque}>Criar conta</Text>
         </Text>
       </TouchableOpacity>
-
     </View>
   );
 }
@@ -100,7 +115,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     paddingTop: 80,
   },
-
   topo: {
     alignItems: 'center',
     marginBottom: 40,
@@ -120,7 +134,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 6,
   },
-
   label: {
     color: '#b8d4e8',
     fontSize: 13,
@@ -159,7 +172,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
-
   btnEntrar: {
     backgroundColor: '#7BCDBA',
     borderRadius: 12,
@@ -173,7 +185,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-
   btnCadastro: {
     alignItems: 'center',
     paddingVertical: 8,

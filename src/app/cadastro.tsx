@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
+  Platform,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Platform,
+  View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { cadastrarUsuario } from '../services/api';
 
 export default function Cadastro() {
   const router = useRouter();
@@ -15,6 +17,7 @@ export default function Cadastro() {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [carregando, setCarregando] = useState(false);
 
   function alerta(mensagem: string) {
     if (Platform.OS === 'web') {
@@ -25,7 +28,7 @@ export default function Cadastro() {
     }
   }
 
-  function handleCadastro() {
+  async function handleCadastro() {
     if (nome.trim() === '' || email.trim() === '' || senha.trim() === '') {
       alerta('Preencha todos os campos.');
       return;
@@ -36,20 +39,28 @@ export default function Cadastro() {
       return;
     }
 
-    if (Platform.OS === 'web') {
-      window.alert('Conta criada com sucesso!');
-      router.replace('/');
-    } else {
-      const { Alert } = require('react-native');
-      Alert.alert('Sucesso', 'Conta criada com sucesso!', [
-        { text: 'OK', onPress: () => router.replace('/') },
-      ]);
+    try {
+      setCarregando(true);
+      await cadastrarUsuario(nome.trim(), email.trim(), senha);
+
+      if (Platform.OS === 'web') {
+        window.alert('Conta criada com sucesso!');
+        router.replace('/');
+      } else {
+        const { Alert } = require('react-native');
+        Alert.alert('Sucesso', 'Conta criada com sucesso!', [
+          { text: 'OK', onPress: () => router.replace('/') },
+        ]);
+      }
+    } catch (error) {
+      alerta(error instanceof Error ? error.message : 'Não foi possível criar a conta.');
+    } finally {
+      setCarregando(false);
     }
   }
 
   return (
     <View style={styles.container}>
-
       <Text style={styles.titulo}>Criar conta</Text>
       <Text style={styles.subtitulo}>Preencha os dados abaixo</Text>
 
@@ -83,16 +94,19 @@ export default function Cadastro() {
         secureTextEntry
       />
 
-      <TouchableOpacity style={styles.btnCadastrar} onPress={handleCadastro}>
-        <Text style={styles.btnText}>Criar conta</Text>
+      <TouchableOpacity style={styles.btnCadastrar} onPress={handleCadastro} disabled={carregando}>
+        {carregando ? (
+          <ActivityIndicator color="#0a2540" />
+        ) : (
+          <Text style={styles.btnText}>Criar conta</Text>
+        )}
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.btnLogin} onPress={() => router.replace('/home')}>
+      <TouchableOpacity style={styles.btnLogin} onPress={() => router.replace('/')}>
         <Text style={styles.btnLoginText}>
           Já tem conta? <Text style={styles.destaque}>Entrar</Text>
         </Text>
       </TouchableOpacity>
-
     </View>
   );
 }
