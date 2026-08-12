@@ -19,7 +19,11 @@ export default function Layout() {
         name="pesqueiros"
         options={{ title: 'pesqueiros' }}
       />
-    
+      <Drawer.Screen
+        name="cadastrarPesqueiro"
+        options={{ title: 'Cadastrar pesqueiro' }}
+      />
+
     </Drawer>
   );
 }

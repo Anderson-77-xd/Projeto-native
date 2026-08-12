@@ -24,7 +24,7 @@ type PesqueiroApi = {
   statusPesqueiro?: boolean;
 };
 
-const API_URL =
+export const API_URL =
   process.env.EXPO_PUBLIC_API_URL ??
   (Platform.OS === 'android' ? 'http://10.0.2.2:8080/api/v1' : 'http://localhost:8080/api/v1');
 
@@ -76,6 +76,27 @@ function adaptarPesqueiro(item: PesqueiroApi, index: number): Pesqueiro {
 export async function listarPesqueiros(): Promise<Pesqueiro[]> {
   const data = await request<PesqueiroApi[]>('/pesqueiro');
   return data.map(adaptarPesqueiro);
+}
+
+export type NovoPesqueiro = {
+  nome: string;
+  telefone: string;
+  descricao: string;
+  informacao: string;
+  cep: string;
+  numero: string;
+  complemento: string;
+};
+
+export async function cadastrarPesqueiro(pesqueiro: NovoPesqueiro) {
+  return request<PesqueiroApi>('/pesqueiro', {
+    method: 'POST',
+    body: JSON.stringify({
+      ...pesqueiro,
+      dataCadastro: new Date().toISOString().slice(0, 10),
+      statusPesqueiro: true,
+    }),
+  });
 }
 
 export async function cadastrarUsuario(nome: string, email: string, senha: string) {

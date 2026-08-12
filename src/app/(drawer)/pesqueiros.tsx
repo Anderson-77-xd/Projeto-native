@@ -62,6 +62,13 @@ export default function Pesqueiros() {
       <StatusBar barStyle="light-content" backgroundColor="#0a2540" />
 
       <ScrollView showsVerticalScrollIndicator={false}>
+        <TouchableOpacity
+          style={styles.btnNovoPesqueiro}
+          onPress={() => router.push('/(drawer)/cadastrarPesqueiro')}
+        >
+          <Text style={styles.btnNovoPesqueiroText}>+ Cadastrar pesqueiro</Text>
+        </TouchableOpacity>
+
         <TextInput
           style={styles.searchInput}
           placeholder="Buscar pesqueiro ou cidade..."
@@ -182,6 +189,19 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
     marginBottom: 14,
+  },
+  btnNovoPesqueiro: {
+    backgroundColor: '#4ADE80',
+    borderRadius: 12,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  btnNovoPesqueiroText: {
+    color: '#0a2540',
+    fontWeight: 'bold',
+    fontSize: 15,
   },
   categoriasScroll: {
     paddingBottom: 16,
