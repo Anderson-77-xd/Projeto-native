@@ -1,11 +1,12 @@
 // src/components/Button/styles.ts
 import { StyleSheet } from 'react-native';
+import { colors } from '../../theme';
 
 export const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#000000', // Roxo da Rocketseat!
-    borderRadius: 8,
-    paddingVertical: 12,
+    backgroundColor: colors.teal,
+    borderRadius: 12,
+    paddingVertical: 14,
     paddingHorizontal: 24,
     alignItems: 'center',
   },

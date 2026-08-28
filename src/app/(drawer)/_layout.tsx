@@ -4,10 +4,6 @@ export default function Layout() {
   return (
     <Drawer>
       <Drawer.Screen
-        name="dashboard"
-        options={{ title: 'Dashboard' }}
-      />
-      <Drawer.Screen
         name="perfil"
         options={{ title: 'Perfil' }}
       />
@@ -18,6 +14,10 @@ export default function Layout() {
       <Drawer.Screen
         name="pesqueiros"
         options={{ title: 'pesqueiros' }}
+      />
+      <Drawer.Screen
+        name="mapa"
+        options={{ title: 'Mapa' }}
       />
     
     </Drawer>

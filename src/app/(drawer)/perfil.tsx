@@ -12,19 +12,9 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { Usuario } from '../../services/api';
-
-const estatisticas = [
-  { valor: '47', label: 'Capturas' },
-  { valor: '12', label: 'Pesqueiros' },
-  { valor: '8', label: 'Espécies' },
-];
-
-const historico = [
-  { id: '1', local: 'Pesqueiro Lago Azul', data: '18/05/2026', peixe: 'Tilápia', peso: '2.3 kg' },
-  { id: '2', local: 'Pesqueiro do Zé', data: '10/05/2026', peixe: 'Dourado', peso: '4.1 kg' },
-  { id: '3', local: 'Recanto do Pescador', data: '02/05/2026', peixe: 'Pintado', peso: '6.8 kg' },
-];
+import { Comentario, listarComentarios, listarFavoritos, listarHistorico, Usuario } from '../../services/api';
+import { Pesqueiro } from '../../data/pesqueiros';
+import { colors } from '../../theme';
 
 const usuarioPadrao: Usuario = {
   nome: 'Usuário Smart Fishing',
@@ -41,6 +31,9 @@ export default function Perfil() {
   const router = useRouter();
   const [usuario, setUsuario] = useState<Usuario>(usuarioPadrao);
   const [fotoPerfil, setFotoPerfil] = useState<string | null>(null);
+  const [favoritos, setFavoritos] = useState<Pesqueiro[]>([]);
+  const [minhasAvaliacoes, setMinhasAvaliacoes] = useState<Comentario[]>([]);
+  const [historico, setHistorico] = useState<Pesqueiro[]>([]);
 
   useEffect(() => {
     async function carregarPerfil() {
@@ -50,6 +43,21 @@ export default function Perfil() {
 
       setUsuario(usuarioAtual);
       setFotoPerfil(fotoSalva);
+
+      try {
+        const [favoritosSalvos, comentarios, historicoSalvo] = await Promise.all([
+          listarFavoritos(),
+          listarComentarios(),
+          listarHistorico(),
+        ]);
+        setFavoritos(favoritosSalvos);
+        setMinhasAvaliacoes(comentarios.filter((comentario) => comentario.usuarioId === usuarioAtual.id));
+        setHistorico(historicoSalvo);
+      } catch {
+        setFavoritos([]);
+        setMinhasAvaliacoes([]);
+        setHistorico([]);
+      }
     }
 
     carregarPerfil();
@@ -114,9 +122,15 @@ export default function Perfil() {
     }
   }
 
+  const estatisticas = [
+    { valor: String(favoritos.length), label: 'Favoritos' },
+    { valor: String(minhasAvaliacoes.length), label: 'Avaliações' },
+    { valor: usuario.statusUsuario === false ? '0' : '1', label: 'Conta ativa' },
+  ];
+
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0a2540" />
+      <StatusBar barStyle="light-content" backgroundColor={colors.navy} />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.topo}>
@@ -179,21 +193,37 @@ export default function Perfil() {
         </View>
 
         <View style={styles.secao}>
-          <Text style={styles.secaoTitulo}>Últimas pescarias</Text>
+          <Text style={styles.secaoTitulo}>Últimos pesqueiros visitados</Text>
+          {historico.length === 0 ? (
+            <Text style={styles.semConteudo}>Os pesqueiros que você visitar aparecerão aqui.</Text>
+          ) : historico.slice(0, 3).map((pesqueiro) => (
+            <TouchableOpacity key={pesqueiro.id} style={styles.favoritoRow} onPress={() => router.push({ pathname: '/detalhes', params: pesqueiro })}>
+              <Text style={styles.favoritoNome}>{pesqueiro.nome}</Text>
+              <Text style={styles.favoritoMeta}>{pesqueiro.cidade}, {pesqueiro.estado}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
-          {historico.map((h) => (
-            <View key={h.id}>
-              <View style={styles.historicoRow}>
-                <View style={styles.historicoIcone}>
-                  <Text style={{ fontSize: 20 }}></Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.historicoLocal}>{h.local}</Text>
-                  <Text style={styles.historicoMeta}>{h.peixe} · {h.peso}</Text>
-                </View>
-                <Text style={styles.historicoData}>{h.data}</Text>
-              </View>
-              {h.id !== '3' && <View style={styles.divisor} />}
+        <View style={styles.secao}>
+          <Text style={styles.secaoTitulo}>Meus favoritos</Text>
+          {favoritos.length === 0 ? (
+            <Text style={styles.semConteudo}>Toque no coração de um pesqueiro para salvá-lo aqui.</Text>
+          ) : favoritos.slice(0, 3).map((pesqueiro) => (
+            <TouchableOpacity key={pesqueiro.id} style={styles.favoritoRow} onPress={() => router.push({ pathname: '/detalhes', params: pesqueiro })}>
+              <Text style={styles.favoritoNome}>{pesqueiro.nome}</Text>
+              <Text style={styles.favoritoMeta}>{pesqueiro.cidade} · R$ {pesqueiro.preco}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={styles.secao}>
+          <Text style={styles.secaoTitulo}>Minhas avaliações</Text>
+          {minhasAvaliacoes.length === 0 ? (
+            <Text style={styles.semConteudo}>Suas avaliações aparecerão aqui.</Text>
+          ) : minhasAvaliacoes.slice(0, 3).map((comentario) => (
+            <View key={comentario.id} style={styles.avaliacaoRow}>
+              <Text style={styles.avaliacaoNota}>{'★'.repeat(comentario.nota)}</Text>
+              <Text style={styles.avaliacaoTexto} numberOfLines={2}>{comentario.descricao}</Text>
             </View>
           ))}
         </View>
@@ -223,12 +253,16 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a2540',
+    backgroundColor: colors.background,
   },
   topo: {
     alignItems: 'center',
     paddingTop: 30,
-    paddingBottom: 24,
+    paddingBottom: 28,
+    backgroundColor: colors.navy,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    marginBottom: 16,
   },
   avatarContainer: {
     position: 'relative',
@@ -239,53 +273,53 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     borderWidth: 3,
-    borderColor: '#4ADE80',
+    borderColor: colors.teal,
   },
   avatarBadge: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#4ADE80',
+    backgroundColor: colors.teal,
     borderRadius: 20,
     width: 32,
     height: 32,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#0a2540',
+    borderColor: colors.navy,
   },
   avatarBadgeText: {
-    color: '#0a2540',
+    color: '#FFFFFF',
     fontSize: 22,
     fontWeight: 'bold',
     lineHeight: 24,
   },
   btnTrocarFoto: {
-    backgroundColor: '#112e50',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#1e4d7a',
+    borderColor: 'rgba(255, 255, 255, 0.25)',
     paddingHorizontal: 14,
     paddingVertical: 7,
     marginBottom: 14,
   },
   btnTrocarFotoText: {
-    color: '#4ADE80',
+    color: colors.tealSoft,
     fontSize: 12,
     fontWeight: '700',
   },
   nome: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 22,
     fontWeight: 'bold',
   },
   email: {
-    color: '#7aabcc',
+    color: colors.navyMuted,
     fontSize: 14,
     marginTop: 4,
   },
   cidade: {
-    color: '#4ADE80',
+    color: colors.tealSoft,
     fontSize: 13,
     marginTop: 6,
   },
@@ -297,34 +331,44 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#112e50',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     padding: 14,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#1e4d7a',
+    borderColor: colors.border,
+    shadowColor: '#173C4B',
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
   },
   statValor: {
-    color: '#4ADE80',
+    color: colors.teal,
     fontSize: 22,
     fontWeight: 'bold',
   },
   statLabel: {
-    color: '#7aabcc',
+    color: colors.textSecondary,
     fontSize: 11,
     marginTop: 3,
   },
   secao: {
-    backgroundColor: '#112e50',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     marginHorizontal: 16,
     marginBottom: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#1e4d7a',
+    borderColor: colors.border,
+    shadowColor: '#173C4B',
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
   },
   secaoTitulo: {
-    color: '#fff',
+    color: colors.textPrimary,
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 16,
@@ -341,45 +385,50 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   infoLabel: {
-    color: '#7aabcc',
+    color: colors.textSecondary,
     fontSize: 12,
   },
   infoValor: {
-    color: '#fff',
+    color: colors.textPrimary,
     fontSize: 15,
     marginTop: 2,
   },
   divisor: {
     height: 1,
-    backgroundColor: '#1e4d7a',
+    backgroundColor: colors.border,
     marginVertical: 12,
   },
-  historicoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+  semConteudo: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 19,
   },
-  historicoIcone: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#0a2540',
-    justifyContent: 'center',
-    alignItems: 'center',
+  favoritoRow: {
+    paddingVertical: 10,
   },
-  historicoLocal: {
-    color: '#fff',
+  favoritoNome: {
+    color: colors.textPrimary,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
-  historicoMeta: {
-    color: '#7aabcc',
+  favoritoMeta: {
+    color: colors.textSecondary,
     fontSize: 12,
-    marginTop: 2,
+    marginTop: 3,
   },
-  historicoData: {
-    color: '#4a7a96',
-    fontSize: 11,
+  avaliacaoRow: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  avaliacaoNota: {
+    color: colors.star,
+    fontSize: 13,
+    marginBottom: 4,
+  },
+  avaliacaoTexto: {
+    color: colors.textSecondary,
+    fontSize: 13,
   },
   btnSair: {
     marginHorizontal: 16,
@@ -388,10 +437,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ef4444',
+    borderColor: colors.danger,
   },
   btnSairText: {
-    color: '#ef4444',
+    color: colors.danger,
     fontSize: 15,
     fontWeight: '600',
   },

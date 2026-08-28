@@ -12,6 +12,9 @@ export type Pesqueiro = {
   categoria: string;
   especies: string[];
   distancia: string;
+  latitude: number;
+  longitude: number;
+  telefone?: string;
 };
 
 export const pesqueiros: Pesqueiro[] = [
@@ -29,6 +32,8 @@ export const pesqueiros: Pesqueiro[] = [
     categoria: 'Família',
     especies: ['Tilápia', 'Tucunaré', 'Traíra'],
     distancia: '3.2 km',
+    latitude: -23.527900,
+    longitude: -46.784200,
   },
   {
     id: '2',
@@ -44,6 +49,8 @@ export const pesqueiros: Pesqueiro[] = [
     categoria: 'Esportivo',
     especies: ['Dourado', 'Pacu', 'Carpa'],
     distancia: '7.8 km',
+    latitude: -23.510600,
+    longitude: -46.876300,
   },
   {
     id: '3',
@@ -59,6 +66,8 @@ export const pesqueiros: Pesqueiro[] = [
     categoria: 'Noturno',
     especies: ['Pintado', 'Surubim', 'Bagre'],
     distancia: '12.1 km',
+    latitude: -23.561300,
+    longitude: -46.625900,
   },
   {
     id: '4',
@@ -74,6 +83,8 @@ export const pesqueiros: Pesqueiro[] = [
     categoria: 'Família',
     especies: ['Tilápia', 'Lambari', 'Traíra'],
     distancia: '5.4 km',
+    latitude: -23.522500,
+    longitude: -46.835800,
   },
   {
     id: '5',
@@ -89,6 +100,8 @@ export const pesqueiros: Pesqueiro[] = [
     categoria: 'Esportivo',
     especies: ['Tucunaré', 'Dourado', 'Pacu', 'Carpa'],
     distancia: '15.0 km',
+    latitude: -23.444300,
+    longitude: -46.918600,
   },
   {
     id: '6',
@@ -104,6 +117,8 @@ export const pesqueiros: Pesqueiro[] = [
     categoria: 'Esportivo',
     especies: ['Surubim', 'Pintado', 'Dourado'],
     distancia: '9.3 km',
+    latitude: -23.527200,
+    longitude: -46.901400,
   },
   {
     id: '7',
@@ -119,6 +134,8 @@ export const pesqueiros: Pesqueiro[] = [
     categoria: 'Família',
     especies: ['Tilápia', 'Carpa', 'Lambari'],
     distancia: '18.5 km',
+    latitude: -23.548600,
+    longitude: -46.934500,
   },
   {
     id: '8',
@@ -134,5 +151,7 @@ export const pesqueiros: Pesqueiro[] = [
     categoria: 'Noturno',
     especies: ['Bagre', 'Traíra', 'Tucunaré', 'Pintado'],
     distancia: '4.1 km',
+    latitude: -23.538900,
+    longitude: -46.772900,
   },
 ];

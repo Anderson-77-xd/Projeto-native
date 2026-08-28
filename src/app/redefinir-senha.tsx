@@ -8,17 +8,25 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { cadastrarUsuario } from '../services/api';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { redefinirSenha } from '../services/api';
 import { colors } from '../theme';
 
-export default function Cadastro() {
+export default function RedefinirSenha() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const tokenRecebido = Array.isArray(params.token) ? params.token[0] : params.token;
 
-  const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
+  const [token, setToken] = useState(tokenRecebido ?? '');
+  const [novaSenha, setNovaSenha] = useState('');
+  const [confirmarSenha, setConfirmarSenha] = useState('');
   const [carregando, setCarregando] = useState(false);
+
+  function extrairToken(valor: string) {
+    const bruto = valor.trim();
+    const match = bruto.match(/token=([^&]+)/);
+    return match ? decodeURIComponent(match[1]) : bruto;
+  }
 
   function alerta(mensagem: string) {
     if (Platform.OS === 'web') {
@@ -29,32 +37,39 @@ export default function Cadastro() {
     }
   }
 
-  async function handleCadastro() {
-    if (nome.trim() === '' || email.trim() === '' || senha.trim() === '') {
-      alerta('Preencha todos os campos.');
+  async function handleRedefinir() {
+    const tokenLimpo = extrairToken(token);
+
+    if (!tokenLimpo) {
+      alerta('Cole o código ou o link recebido por e-mail.');
       return;
     }
 
-    if (senha.length < 6) {
-      alerta('A senha deve ter pelo menos 6 caracteres.');
+    if (novaSenha.length < 6) {
+      alerta('A nova senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+
+    if (novaSenha !== confirmarSenha) {
+      alerta('As senhas não coincidem.');
       return;
     }
 
     try {
       setCarregando(true);
-      await cadastrarUsuario(nome.trim(), email.trim(), senha);
+      await redefinirSenha(tokenLimpo, novaSenha);
 
       if (Platform.OS === 'web') {
-        window.alert('Conta criada com sucesso!');
+        window.alert('Senha redefinida com sucesso! Faça login com a nova senha.');
         router.replace('/');
       } else {
         const { Alert } = require('react-native');
-        Alert.alert('Sucesso', 'Conta criada com sucesso!', [
+        Alert.alert('Sucesso', 'Senha redefinida com sucesso! Faça login com a nova senha.', [
           { text: 'OK', onPress: () => router.replace('/') },
         ]);
       }
     } catch (error) {
-      alerta(error instanceof Error ? error.message : 'Não foi possível criar a conta.');
+      alerta(error instanceof Error ? error.message : 'Não foi possível redefinir a senha.');
     } finally {
       setCarregando(false);
     }
@@ -62,50 +77,52 @@ export default function Cadastro() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titulo}>Criar conta</Text>
-      <Text style={styles.subtitulo}>Preencha os dados abaixo</Text>
+      <Text style={styles.titulo}>Redefinir senha</Text>
+      <Text style={styles.subtitulo}>
+        Cole o código recebido no e-mail de redefinição e escolha uma nova senha.
+      </Text>
 
-      <Text style={styles.label}>Nome</Text>
+      <Text style={styles.label}>Código ou link recebido por e-mail</Text>
       <TextInput
         style={styles.input}
-        placeholder="Seu nome completo"
+        placeholder="Cole aqui o código ou o link do e-mail"
         placeholderTextColor={colors.placeholder}
-        value={nome}
-        onChangeText={setNome}
-      />
-
-      <Text style={styles.label}>E-mail</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="seu@email.com"
-        placeholderTextColor={colors.placeholder}
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
+        value={token}
+        onChangeText={setToken}
         autoCapitalize="none"
       />
 
-      <Text style={styles.label}>Senha</Text>
+      <Text style={styles.label}>Nova senha</Text>
       <TextInput
         style={styles.input}
         placeholder="Mínimo 6 caracteres"
         placeholderTextColor={colors.placeholder}
-        value={senha}
-        onChangeText={setSenha}
+        value={novaSenha}
+        onChangeText={setNovaSenha}
         secureTextEntry
       />
 
-      <TouchableOpacity style={styles.btnCadastrar} onPress={handleCadastro} disabled={carregando}>
+      <Text style={styles.label}>Confirmar nova senha</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Repita a nova senha"
+        placeholderTextColor={colors.placeholder}
+        value={confirmarSenha}
+        onChangeText={setConfirmarSenha}
+        secureTextEntry
+      />
+
+      <TouchableOpacity style={styles.btnRedefinir} onPress={handleRedefinir} disabled={carregando}>
         {carregando ? (
           <ActivityIndicator color="#FFFFFF" />
         ) : (
-          <Text style={styles.btnText}>Criar conta</Text>
+          <Text style={styles.btnText}>Redefinir senha</Text>
         )}
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.btnLogin} onPress={() => router.replace('/')}>
-        <Text style={styles.btnLoginText}>
-          Já tem conta? <Text style={styles.destaque}>Entrar</Text>
+      <TouchableOpacity style={styles.btnLink} onPress={() => router.replace('/')}>
+        <Text style={styles.btnLinkText}>
+          Lembrou a senha? <Text style={styles.destaque}>Entrar</Text>
         </Text>
       </TouchableOpacity>
     </View>
@@ -128,6 +145,7 @@ const styles = StyleSheet.create({
   subtitulo: {
     color: colors.textSecondary,
     fontSize: 15,
+    lineHeight: 21,
     marginBottom: 36,
   },
   label: {
@@ -147,25 +165,26 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginBottom: 20,
   },
-  btnCadastrar: {
+  btnRedefinir: {
     backgroundColor: colors.teal,
     borderRadius: 12,
     height: 52,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 8,
-    marginBottom: 20,
+    marginBottom: 8,
   },
   btnText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  btnLogin: {
+  btnLink: {
     alignItems: 'center',
     paddingVertical: 8,
+    marginTop: 8,
   },
-  btnLoginText: {
+  btnLinkText: {
     color: colors.textSecondary,
     fontSize: 14,
   },
