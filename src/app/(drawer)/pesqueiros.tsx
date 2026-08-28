@@ -13,6 +13,7 @@ export default function Pesqueiros() {
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
   const [precoMaximo, setPrecoMaximo] = useState<number | null>(null);
   const [especieSelecionada, setEspecieSelecionada] = useState('');
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState('');
   const [pesqueiros, setPesqueiros] = useState<Pesqueiro[]>(pesqueirosLocais);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
@@ -46,13 +47,25 @@ export default function Pesqueiros() {
     const buscaCorresponde = !texto || p.nome.toLowerCase().includes(texto) || p.cidade.toLowerCase().includes(texto);
     const precoCorresponde = precoMaximo === null || p.preco <= precoMaximo;
     const especieCorresponde = !especieSelecionada || p.especies.includes(especieSelecionada);
-    return buscaCorresponde && precoCorresponde && especieCorresponde;
-  }), [busca, especieSelecionada, precoMaximo, pesqueirosComDistancia]);
+    const categoriaCorresponde = !categoriaSelecionada || p.categoria === categoriaSelecionada;
+    return buscaCorresponde && precoCorresponde && especieCorresponde && categoriaCorresponde;
+  }), [busca, especieSelecionada, categoriaSelecionada, precoMaximo, pesqueirosComDistancia]);
 
   const especiesDisponiveis = useMemo(
     () => [...new Set(pesqueiros.flatMap((pesqueiro) => pesqueiro.especies))].slice(0, 8),
     [pesqueiros]
   );
+
+  const categoriasDisponiveis = useMemo(
+    () => [...new Set(pesqueiros.map((pesqueiro) => pesqueiro.categoria))],
+    [pesqueiros]
+  );
+
+  function limparFiltros() {
+    setPrecoMaximo(null);
+    setEspecieSelecionada('');
+    setCategoriaSelecionada('');
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -70,13 +83,18 @@ export default function Pesqueiros() {
             </View>
             <Pressable style={styles.mapButton} onPress={() => router.push('/mapa' as any)} accessibilityLabel="Abrir mapa"><Ionicons name="map-outline" size={23} color="#FFFFFF" /></Pressable>
           </View>
-          <Pressable style={styles.filterButton} onPress={() => setFiltrosAbertos((aberto) => !aberto)}><Ionicons name="options-outline" size={18} color="#C5E6E9" /><Text style={styles.filterButtonText}>Filtros</Text>{(precoMaximo || especieSelecionada) ? <View style={styles.filterDot} /> : null}<Ionicons name={filtrosAbertos ? 'chevron-up' : 'chevron-down'} size={16} color="#C5E6E9" /></Pressable>
+          <View style={styles.actionsRow}>
+            <Pressable style={styles.filterButton} onPress={() => setFiltrosAbertos((aberto) => !aberto)}><Ionicons name="options-outline" size={18} color="#C5E6E9" /><Text style={styles.filterButtonText}>Filtros</Text>{(precoMaximo || especieSelecionada || categoriaSelecionada) ? <View style={styles.filterDot} /> : null}<Ionicons name={filtrosAbertos ? 'chevron-up' : 'chevron-down'} size={16} color="#C5E6E9" /></Pressable>
+            <Pressable style={styles.cadastrarLink} onPress={() => router.push('/(drawer)/cadastrarPesqueiro')}><Ionicons name="add-circle-outline" size={18} color="#C5E6E9" /><Text style={styles.filterButtonText}>Cadastrar pesqueiro</Text></Pressable>
+          </View>
         </View>
 
         {filtrosAbertos && <View style={styles.filtersPanel}>
-          <View style={styles.filterTitleRow}><Text style={styles.filtersTitle}>Refine sua busca</Text><Pressable onPress={() => { setPrecoMaximo(null); setEspecieSelecionada(''); }}><Text style={styles.clearFilters}>Limpar</Text></Pressable></View>
+          <View style={styles.filterTitleRow}><Text style={styles.filtersTitle}>Refine sua busca</Text><Pressable onPress={limparFiltros}><Text style={styles.clearFilters}>Limpar</Text></Pressable></View>
           <Text style={styles.filterLabel}>Preço da diária</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChips}>{[[null, 'Qualquer preço'], [30, 'Até R$ 30'], [50, 'Até R$ 50'], [70, 'Até R$ 70']].map(([valor, texto]) => <Pressable key={String(texto)} style={[styles.filterChip, precoMaximo === valor && styles.filterChipActive]} onPress={() => setPrecoMaximo(valor as number | null)}><Text style={[styles.filterChipText, precoMaximo === valor && styles.filterChipTextActive]}>{texto}</Text></Pressable>)}</ScrollView>
+          <Text style={styles.filterLabel}>Categoria</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChips}>{['Todas', ...categoriasDisponiveis].map((categoria) => { const ativa = categoria === 'Todas' ? !categoriaSelecionada : categoriaSelecionada === categoria; return <Pressable key={categoria} style={[styles.filterChip, ativa && styles.filterChipActive]} onPress={() => setCategoriaSelecionada(categoria === 'Todas' ? '' : categoria)}><Text style={[styles.filterChipText, ativa && styles.filterChipTextActive]}>{categoria}</Text></Pressable>; })}</ScrollView>
           <Text style={styles.filterLabel}>Espécie</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChips}>{['Todas', ...especiesDisponiveis].map((especie) => { const ativa = especie === 'Todas' ? !especieSelecionada : especieSelecionada === especie; return <Pressable key={especie} style={[styles.filterChip, ativa && styles.filterChipActive]} onPress={() => setEspecieSelecionada(especie === 'Todas' ? '' : especie)}><Text style={[styles.filterChipText, ativa && styles.filterChipTextActive]}>{especie}</Text></Pressable>; })}</ScrollView>
         </View>}
@@ -93,7 +111,7 @@ export default function Pesqueiros() {
 
         <View style={styles.list}>
           {filtrados.map((item) => <PesqueiroCard key={item.id} item={item} onPress={() => router.push({ pathname: '/detalhes', params: item })} />)}
-          {!carregando && filtrados.length === 0 && <EmptyState onClear={() => { setBusca(''); setPrecoMaximo(null); setEspecieSelecionada(''); }} />}
+          {!carregando && filtrados.length === 0 && <EmptyState onClear={() => { setBusca(''); limparFiltros(); }} />}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -120,7 +138,7 @@ function EmptyState({ onClear }: { onClear: () => void }) {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#062A4A' }, container: { flex: 1, backgroundColor: '#F4F8F8' }, content: { paddingBottom: 35 },
-  header: { backgroundColor: '#062A4A', paddingHorizontal: 20, paddingTop: 17, paddingBottom: 23 }, headerEyebrow: { color: '#9CC3D1', fontSize: 10, fontWeight: '800', letterSpacing: 1.1 }, headerTitle: { color: '#FFFFFF', fontSize: 27, fontWeight: '800', marginTop: 4 }, headerSubtitle: { color: '#B5D3E0', fontSize: 13, marginTop: 4 }, searchRow: { flexDirection: 'row', gap: 10, marginTop: 20 }, searchBox: { flex: 1, height: 52, backgroundColor: '#FFFFFF', borderRadius: 14, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 9 }, searchInput: { flex: 1, height: '100%', color: '#193B50', fontSize: 15 }, mapButton: { height: 52, width: 52, borderRadius: 14, backgroundColor: '#087E8B', justifyContent: 'center', alignItems: 'center' }, filterButton: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 13 }, filterButtonText: { color: '#C5E6E9', fontSize: 13, fontWeight: '700' }, filterDot: { height: 6, width: 6, borderRadius: 3, backgroundColor: '#65E0B5' },
+  header: { backgroundColor: '#062A4A', paddingHorizontal: 20, paddingTop: 17, paddingBottom: 23 }, headerEyebrow: { color: '#9CC3D1', fontSize: 10, fontWeight: '800', letterSpacing: 1.1 }, headerTitle: { color: '#FFFFFF', fontSize: 27, fontWeight: '800', marginTop: 4 }, headerSubtitle: { color: '#B5D3E0', fontSize: 13, marginTop: 4 }, searchRow: { flexDirection: 'row', gap: 10, marginTop: 20 }, searchBox: { flex: 1, height: 52, backgroundColor: '#FFFFFF', borderRadius: 14, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 9 }, searchInput: { flex: 1, height: '100%', color: '#193B50', fontSize: 15 }, mapButton: { height: 52, width: 52, borderRadius: 14, backgroundColor: '#087E8B', justifyContent: 'center', alignItems: 'center' }, actionsRow: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 18, rowGap: 8, marginTop: 13 }, filterButton: { flexDirection: 'row', alignItems: 'center', gap: 6 }, filterButtonText: { color: '#C5E6E9', fontSize: 13, fontWeight: '700' }, filterDot: { height: 6, width: 6, borderRadius: 3, backgroundColor: '#65E0B5' }, cadastrarLink: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   filtersPanel: { backgroundColor: '#E8F3F3', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 13 }, filterTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, filtersTitle: { color: '#244A5D', fontSize: 14, fontWeight: '800' }, clearFilters: { color: '#087E8B', fontSize: 12, fontWeight: '800' }, filterLabel: { color: '#617C8C', fontSize: 12, fontWeight: '700', marginTop: 14, marginBottom: 7 }, filterChips: { gap: 7, paddingRight: 16 }, filterChip: { borderWidth: 1, borderColor: '#C9DDE0', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7, backgroundColor: '#FFF' }, filterChipActive: { backgroundColor: '#087E8B', borderColor: '#087E8B' }, filterChipText: { color: '#527180', fontSize: 12, fontWeight: '600' }, filterChipTextActive: { color: '#FFF' },
   filterArea: { backgroundColor: '#FFFFFF', paddingVertical: 14, shadowColor: '#15394C', shadowOpacity: 0.08, shadowRadius: 7, shadowOffset: { width: 0, height: 3 }, elevation: 2 }, resultRow: { marginHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, resultText: { color: '#668091', fontSize: 12 }, locationStatus: { flexDirection: 'row', gap: 4, alignItems: 'center' }, locationStatusText: { color: '#087E8B', fontSize: 11, fontWeight: '700' },
   loading: { marginTop: 24 }, notice: { marginHorizontal: 16, marginTop: 16, backgroundColor: '#FFF5D8', flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 10, padding: 10 }, noticeText: { color: '#765B19', fontSize: 12, flex: 1 }, list: { paddingTop: 17 },
