@@ -22,6 +22,7 @@ export type Comentario = {
   descricao: string;
   pesqueiroId: number;
   usuarioId: number;
+  usuarioNome?: string;
   dataCadastro: string;
   nota: number;
 };

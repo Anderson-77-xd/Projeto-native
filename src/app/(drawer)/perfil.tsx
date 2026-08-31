@@ -125,7 +125,6 @@ export default function Perfil() {
   const estatisticas = [
     { valor: String(favoritos.length), label: 'Favoritos' },
     { valor: String(minhasAvaliacoes.length), label: 'Avaliações' },
-    { valor: usuario.statusUsuario === false ? '0' : '1', label: 'Conta ativa' },
   ];
 
   return (
@@ -156,7 +155,6 @@ export default function Perfil() {
           </TouchableOpacity>
           <Text style={styles.nome}>{usuario.nome}</Text>
           <Text style={styles.email}>{usuario.email}</Text>
-          <Text style={styles.cidade}>{usuario.nivelAcesso ?? 'CLIENTE'}</Text>
         </View>
 
         <View style={styles.statsRow}>
@@ -175,15 +173,6 @@ export default function Perfil() {
           <View style={styles.divisor} />
 
           <InfoRow label="E-mail" value={usuario.email} />
-          <View style={styles.divisor} />
-
-          <InfoRow label="Nível de acesso" value={usuario.nivelAcesso ?? 'CLIENTE'} />
-          <View style={styles.divisor} />
-
-          <InfoRow
-            label="Status"
-            value={usuario.statusUsuario === false ? 'Inativo' : 'Ativo'}
-          />
           {usuario.dataCadastro && (
             <>
               <View style={styles.divisor} />
