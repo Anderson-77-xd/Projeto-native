@@ -152,6 +152,13 @@ export async function loginUsuario(email: string, senha: string) {
   });
 }
 
+export async function atualizarUsuario(id: number, dados: { nome: string; email: string; senha?: string }) {
+  return requestAutenticado<Usuario>(`/usuario/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(dados),
+  });
+}
+
 export async function esqueciSenha(email: string) {
   return request<{ message: string }>('/usuario/esqueci-senha', {
     method: 'POST',

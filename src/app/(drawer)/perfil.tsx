@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   Image,
   Platform,
@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Comentario, listarComentarios, listarFavoritos, listarHistorico, Usuario } from '../../services/api';
 import { Pesqueiro } from '../../data/pesqueiros';
 import { colors } from '../../theme';
@@ -35,33 +35,35 @@ export default function Perfil() {
   const [minhasAvaliacoes, setMinhasAvaliacoes] = useState<Comentario[]>([]);
   const [historico, setHistorico] = useState<Pesqueiro[]>([]);
 
-  useEffect(() => {
-    async function carregarPerfil() {
-      const usuarioSalvo = await AsyncStorage.getItem('@smartfishing:usuario');
-      const usuarioAtual = usuarioSalvo ? JSON.parse(usuarioSalvo) as Usuario : usuarioPadrao;
-      const fotoSalva = await AsyncStorage.getItem(chaveFotoPerfil(usuarioAtual.email));
+  useFocusEffect(
+    useCallback(() => {
+      async function carregarPerfil() {
+        const usuarioSalvo = await AsyncStorage.getItem('@smartfishing:usuario');
+        const usuarioAtual = usuarioSalvo ? JSON.parse(usuarioSalvo) as Usuario : usuarioPadrao;
+        const fotoSalva = await AsyncStorage.getItem(chaveFotoPerfil(usuarioAtual.email));
 
-      setUsuario(usuarioAtual);
-      setFotoPerfil(fotoSalva);
+        setUsuario(usuarioAtual);
+        setFotoPerfil(fotoSalva);
 
-      try {
-        const [favoritosSalvos, comentarios, historicoSalvo] = await Promise.all([
-          listarFavoritos(),
-          listarComentarios(),
-          listarHistorico(),
-        ]);
-        setFavoritos(favoritosSalvos);
-        setMinhasAvaliacoes(comentarios.filter((comentario) => comentario.usuarioId === usuarioAtual.id));
-        setHistorico(historicoSalvo);
-      } catch {
-        setFavoritos([]);
-        setMinhasAvaliacoes([]);
-        setHistorico([]);
+        try {
+          const [favoritosSalvos, comentarios, historicoSalvo] = await Promise.all([
+            listarFavoritos(),
+            listarComentarios(),
+            listarHistorico(),
+          ]);
+          setFavoritos(favoritosSalvos);
+          setMinhasAvaliacoes(comentarios.filter((comentario) => comentario.usuarioId === usuarioAtual.id));
+          setHistorico(historicoSalvo);
+        } catch {
+          setFavoritos([]);
+          setMinhasAvaliacoes([]);
+          setHistorico([]);
+        }
       }
-    }
 
-    carregarPerfil();
-  }, []);
+      carregarPerfil();
+    }, []),
+  );
 
   function alerta(titulo: string, mensagem: string) {
     if (Platform.OS === 'web') {
@@ -155,6 +157,13 @@ export default function Perfil() {
           </TouchableOpacity>
           <Text style={styles.nome}>{usuario.nome}</Text>
           <Text style={styles.email}>{usuario.email}</Text>
+          <TouchableOpacity
+            style={styles.btnEditarPerfil}
+            onPress={() => router.push('/editar-perfil')}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.btnEditarPerfilText}>Editar perfil</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.statsRow}>
@@ -306,6 +315,20 @@ const styles = StyleSheet.create({
     color: colors.navyMuted,
     fontSize: 14,
     marginTop: 4,
+  },
+  btnEditarPerfil: {
+    marginTop: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  btnEditarPerfilText: {
+    color: colors.tealSoft,
+    fontSize: 12,
+    fontWeight: '700',
   },
   cidade: {
     color: colors.tealSoft,
