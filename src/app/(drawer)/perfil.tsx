@@ -107,7 +107,7 @@ export default function Perfil() {
   }
 
   async function sairDaConta() {
-    await AsyncStorage.removeItem('@smartfishing:usuario');
+    await AsyncStorage.multiRemove(['@smartfishing:usuario', '@smartfishing:token']);
     router.replace('/');
   }
 

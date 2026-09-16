@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { loginUsuario } from '../services/api';
 
 export default function Login() {
@@ -25,6 +25,12 @@ export default function Login() {
   const [senhaVisivel, setSenhaVisivel] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [campoAtivo, setCampoAtivo] = useState<'email' | 'senha' | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      AsyncStorage.multiRemove(['@smartfishing:usuario', '@smartfishing:token']);
+    }, []),
+  );
 
   function alerta(titulo: string, mensagem: string) {
     if (Platform.OS === 'web') {
@@ -49,7 +55,7 @@ export default function Login() {
         ['@smartfishing:usuario', JSON.stringify(sessao.usuario)],
         ['@smartfishing:token', sessao.token],
       ]);
-      router.replace('/(drawer)/home' as any);
+      router.push('/(drawer)/home' as any);
     } catch (error) {
       alerta('Não foi possível entrar', error instanceof Error ? error.message : 'Tente novamente em alguns instantes.');
     } finally {

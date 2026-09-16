@@ -12,9 +12,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { atualizarUsuario, Usuario } from '../services/api';
 import { colors } from '../theme';
+import { useExigirAutenticacao } from '../hooks/useExigirAutenticacao';
+import { emailValido } from '../utils/validarEmail';
 
 export default function EditarPerfil() {
   const router = useRouter();
+  const { autenticado, verificando } = useExigirAutenticacao();
 
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [nome, setNome] = useState('');
@@ -52,8 +55,13 @@ export default function EditarPerfil() {
       return;
     }
 
-    if (novaSenha && novaSenha.length < 6) {
-      alerta('A nova senha deve ter pelo menos 6 caracteres.');
+    if (/\s/.test(email) || !emailValido(email.trim())) {
+      alerta('Digite um e-mail válido, sem espaços (exemplo: nome@dominio.com).');
+      return;
+    }
+
+    if (novaSenha && (novaSenha.length < 8 || !/[0-9!@#$%^&*(),.?":{}|<>_\-+=[\]\\/;'`~]/.test(novaSenha))) {
+      alerta('A nova senha deve ter pelo menos 8 caracteres, incluindo pelo menos um número ou caractere especial.');
       return;
     }
 
@@ -86,6 +94,14 @@ export default function EditarPerfil() {
     }
   }
 
+  if (verificando || !autenticado) {
+    return (
+      <View style={[styles.container, { alignItems: 'center', justifyContent: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.teal} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.titulo}>Editar perfil</Text>
@@ -106,7 +122,7 @@ export default function EditarPerfil() {
         placeholder="seu@email.com"
         placeholderTextColor={colors.placeholder}
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(texto) => setEmail(texto.replace(/\s/g, ''))}
         keyboardType="email-address"
         autoCapitalize="none"
       />

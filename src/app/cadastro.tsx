@@ -11,6 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { cadastrarUsuario } from '../services/api';
 import { colors } from '../theme';
+import { emailValido } from '../utils/validarEmail';
 
 export default function Cadastro() {
   const router = useRouter();
@@ -35,8 +36,13 @@ export default function Cadastro() {
       return;
     }
 
-    if (senha.length < 6) {
-      alerta('A senha deve ter pelo menos 6 caracteres.');
+    if (/\s/.test(email) || !emailValido(email.trim())) {
+      alerta('Digite um e-mail válido, sem espaços (exemplo: nome@dominio.com).');
+      return;
+    }
+
+    if (senha.length < 8 || !/[0-9!@#$%^&*(),.?":{}|<>_\-+=[\]\\/;'`~]/.test(senha)) {
+      alerta('A senha deve ter pelo menos 8 caracteres, incluindo pelo menos um número ou caractere especial.');
       return;
     }
 
@@ -80,7 +86,7 @@ export default function Cadastro() {
         placeholder="seu@email.com"
         placeholderTextColor={colors.placeholder}
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(texto) => setEmail(texto.replace(/\s/g, ''))}
         keyboardType="email-address"
         autoCapitalize="none"
       />
@@ -88,7 +94,7 @@ export default function Cadastro() {
       <Text style={styles.label}>Senha</Text>
       <TextInput
         style={styles.input}
-        placeholder="Mínimo 6 caracteres"
+        placeholder="Mínimo 8 caracteres, com número ou símbolo"
         placeholderTextColor={colors.placeholder}
         value={senha}
         onChangeText={setSenha}

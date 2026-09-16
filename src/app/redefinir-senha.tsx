@@ -45,8 +45,8 @@ export default function RedefinirSenha() {
       return;
     }
 
-    if (novaSenha.length < 6) {
-      alerta('A nova senha deve ter pelo menos 6 caracteres.');
+    if (novaSenha.length < 8 || !/[0-9!@#$%^&*(),.?":{}|<>_\-+=[\]\\/;'`~]/.test(novaSenha)) {
+      alerta('A nova senha deve ter pelo menos 8 caracteres, incluindo pelo menos um número ou caractere especial.');
       return;
     }
 
@@ -95,7 +95,7 @@ export default function RedefinirSenha() {
       <Text style={styles.label}>Nova senha</Text>
       <TextInput
         style={styles.input}
-        placeholder="Mínimo 6 caracteres"
+        placeholder="Mínimo 8 caracteres, com número ou símbolo"
         placeholderTextColor={colors.placeholder}
         value={novaSenha}
         onChangeText={setNovaSenha}
