@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Comentario, listarComentarios, listarFavoritos, listarHistorico, Usuario } from '../../services/api';
@@ -136,10 +137,13 @@ export default function Perfil() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.topo}>
           <View style={styles.avatarContainer}>
-            <Image
-              source={fotoPerfil ? { uri: fotoPerfil } : require('../../../assets/Foto-perfil.jpg')}
-              style={styles.avatar}
-            />
+            {fotoPerfil ? (
+              <Image source={{ uri: fotoPerfil }} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Ionicons name="person" size={44} color={colors.teal} />
+              </View>
+            )}
             <TouchableOpacity
               style={styles.avatarBadge}
               onPress={trocarFotoPerfil}
@@ -178,14 +182,14 @@ export default function Perfil() {
         <View style={styles.secao}>
           <Text style={styles.secaoTitulo}>Informações</Text>
 
-          <InfoRow label="Nome" value={usuario.nome} />
+          <InfoRow icon="person-outline" label="Nome" value={usuario.nome} />
           <View style={styles.divisor} />
 
-          <InfoRow label="E-mail" value={usuario.email} />
+          <InfoRow icon="mail-outline" label="E-mail" value={usuario.email} />
           {usuario.dataCadastro && (
             <>
               <View style={styles.divisor} />
-              <InfoRow label="Cadastro" value={usuario.dataCadastro} />
+              <InfoRow icon="calendar-outline" label="Cadastro" value={usuario.dataCadastro} />
             </>
           )}
         </View>
@@ -236,10 +240,12 @@ export default function Perfil() {
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function InfoRow({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string }) {
   return (
     <View style={styles.infoRow}>
-      <Text style={styles.infoIcone}></Text>
+      <View style={styles.infoIconBadge}>
+        <Ionicons name={icon} size={17} color={colors.teal} />
+      </View>
       <View>
         <Text style={styles.infoLabel}>{label}</Text>
         <Text style={styles.infoValor}>{value}</Text>
@@ -272,6 +278,16 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     borderWidth: 3,
     borderColor: colors.teal,
+  },
+  avatarPlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 3,
+    borderColor: colors.teal,
+    backgroundColor: '#EAF6F4',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   avatarBadge: {
     position: 'absolute',
@@ -391,10 +407,13 @@ const styles = StyleSheet.create({
     gap: 14,
     paddingVertical: 4,
   },
-  infoIcone: {
-    fontSize: 20,
-    width: 28,
-    textAlign: 'center',
+  infoIconBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.tealSoft + '55',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   infoLabel: {
     color: colors.textSecondary,

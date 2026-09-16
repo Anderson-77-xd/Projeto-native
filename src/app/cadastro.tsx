@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
   Platform,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { cadastrarUsuario } from '../services/api';
 import { colors } from '../theme';
@@ -19,7 +24,9 @@ export default function Cadastro() {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [senhaVisivel, setSenhaVisivel] = useState(false);
   const [carregando, setCarregando] = useState(false);
+  const [campoAtivo, setCampoAtivo] = useState<'nome' | 'email' | 'senha' | null>(null);
 
   function alerta(mensagem: string) {
     if (Platform.OS === 'web') {
@@ -67,116 +74,121 @@ export default function Cadastro() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.titulo}>Criar conta</Text>
-      <Text style={styles.subtitulo}>Preencha os dados abaixo</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.navy} />
+      <KeyboardAvoidingView style={styles.keyboardView} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          <View style={styles.hero}>
+            <Pressable onPress={() => router.back()} hitSlop={10} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Voltar">
+              <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+            </Pressable>
+            <View style={styles.heroIcon}>
+              <Ionicons name="person-add-outline" size={30} color="#FFFFFF" />
+            </View>
+            <Text style={styles.brand}>Criar conta</Text>
+            <Text style={styles.tagline}>Junte-se à comunidade de pescadores.</Text>
+          </View>
 
-      <Text style={styles.label}>Nome</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Seu nome completo"
-        placeholderTextColor={colors.placeholder}
-        value={nome}
-        onChangeText={setNome}
-      />
+          <View style={styles.card}>
+            <Text style={styles.label}>Nome</Text>
+            <View style={[styles.inputWrapper, campoAtivo === 'nome' && styles.inputWrapperFocused]}>
+              <Ionicons name="person-outline" size={20} color={campoAtivo === 'nome' ? colors.teal : '#60758A'} />
+              <TextInput
+                style={styles.input}
+                placeholder="Seu nome completo"
+                placeholderTextColor={colors.placeholder}
+                value={nome}
+                onChangeText={setNome}
+                onFocus={() => setCampoAtivo('nome')}
+                onBlur={() => setCampoAtivo(null)}
+                returnKeyType="next"
+              />
+            </View>
 
-      <Text style={styles.label}>E-mail</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="seu@email.com"
-        placeholderTextColor={colors.placeholder}
-        value={email}
-        onChangeText={(texto) => setEmail(texto.replace(/\s/g, ''))}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
+            <Text style={styles.label}>E-mail</Text>
+            <View style={[styles.inputWrapper, campoAtivo === 'email' && styles.inputWrapperFocused]}>
+              <Ionicons name="mail-outline" size={20} color={campoAtivo === 'email' ? colors.teal : '#60758A'} />
+              <TextInput
+                style={styles.input}
+                placeholder="seu@email.com"
+                placeholderTextColor={colors.placeholder}
+                value={email}
+                onChangeText={(texto) => setEmail(texto.replace(/\s/g, ''))}
+                onFocus={() => setCampoAtivo('email')}
+                onBlur={() => setCampoAtivo(null)}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                returnKeyType="next"
+              />
+            </View>
 
-      <Text style={styles.label}>Senha</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Mínimo 8 caracteres, com número ou símbolo"
-        placeholderTextColor={colors.placeholder}
-        value={senha}
-        onChangeText={setSenha}
-        secureTextEntry
-      />
+            <Text style={styles.label}>Senha</Text>
+            <View style={[styles.inputWrapper, campoAtivo === 'senha' && styles.inputWrapperFocused]}>
+              <Ionicons name="lock-closed-outline" size={20} color={campoAtivo === 'senha' ? colors.teal : '#60758A'} />
+              <TextInput
+                style={styles.input}
+                placeholder="Mínimo 8 caracteres, com número ou símbolo"
+                placeholderTextColor={colors.placeholder}
+                value={senha}
+                onChangeText={setSenha}
+                onFocus={() => setCampoAtivo('senha')}
+                onBlur={() => setCampoAtivo(null)}
+                secureTextEntry={!senhaVisivel}
+                autoCapitalize="none"
+                returnKeyType="go"
+                onSubmitEditing={handleCadastro}
+              />
+              <Pressable
+                onPress={() => setSenhaVisivel((visivel) => !visivel)}
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel={senhaVisivel ? 'Ocultar senha' : 'Mostrar senha'}
+              >
+                <Ionicons name={senhaVisivel ? 'eye-off-outline' : 'eye-outline'} size={22} color="#35617B" />
+              </Pressable>
+            </View>
 
-      <TouchableOpacity style={styles.btnCadastrar} onPress={handleCadastro} disabled={carregando}>
-        {carregando ? (
-          <ActivityIndicator color="#FFFFFF" />
-        ) : (
-          <Text style={styles.btnText}>Criar conta</Text>
-        )}
-      </TouchableOpacity>
+            <Pressable
+              style={({ pressed }) => [styles.button, (pressed || carregando) && styles.buttonPressed]}
+              onPress={handleCadastro}
+              disabled={carregando}
+              accessibilityRole="button"
+            >
+              {carregando ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.buttonText}>Criar conta</Text>}
+            </Pressable>
 
-      <TouchableOpacity style={styles.btnLogin} onPress={() => router.replace('/')}>
-        <Text style={styles.btnLoginText}>
-          Já tem conta? <Text style={styles.destaque}>Entrar</Text>
-        </Text>
-      </TouchableOpacity>
-    </View>
+            <View style={styles.footerRow}>
+              <Text style={styles.footerText}>Já tem uma conta?</Text>
+              <Pressable onPress={() => router.replace('/')} hitSlop={8}>
+                <Text style={styles.footerLink}> Entrar</Text>
+              </Pressable>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    paddingHorizontal: 28,
-    paddingTop: 80,
-  },
-  titulo: {
-    color: colors.textPrimary,
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 6,
-  },
-  subtitulo: {
-    color: colors.textSecondary,
-    fontSize: 15,
-    marginBottom: 36,
-  },
-  label: {
-    color: colors.textPrimary,
-    fontSize: 13,
-    fontWeight: '500',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: 16,
-    height: 50,
-    color: colors.textPrimary,
-    fontSize: 15,
-    marginBottom: 20,
-  },
-  btnCadastrar: {
-    backgroundColor: colors.teal,
-    borderRadius: 12,
-    height: 52,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 20,
-  },
-  btnText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  btnLogin: {
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  btnLoginText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-  },
-  destaque: {
-    color: colors.teal,
-    fontWeight: 'bold',
-  },
+  safeArea: { flex: 1, backgroundColor: colors.navy },
+  keyboardView: { flex: 1 },
+  scrollContent: { flexGrow: 1, backgroundColor: colors.navy },
+  hero: { alignItems: 'center', paddingTop: 12, paddingBottom: 30, paddingHorizontal: 24 },
+  backButton: { position: 'absolute', top: 4, left: 20, height: 39, width: 39, borderRadius: 12, backgroundColor: 'rgba(255, 255, 255, 0.12)', alignItems: 'center', justifyContent: 'center' },
+  heroIcon: { width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(255, 255, 255, 0.14)', alignItems: 'center', justifyContent: 'center', marginTop: 44 },
+  brand: { color: '#FFFFFF', fontSize: 26, fontWeight: '800', marginTop: 16, letterSpacing: 0.2 },
+  tagline: { color: '#B7D5E5', fontSize: 14, marginTop: 5 },
+  card: { flex: 1, backgroundColor: colors.surface, borderTopLeftRadius: 30, borderTopRightRadius: 30, paddingHorizontal: 28, paddingTop: 30, paddingBottom: 30, minHeight: 420 },
+  label: { color: '#29475D', fontSize: 14, fontWeight: '700', marginBottom: 8 },
+  inputWrapper: { height: 54, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 15, marginBottom: 21, backgroundColor: '#F4F8FA', borderColor: '#D7E2E8', borderWidth: 1, borderRadius: 14 },
+  inputWrapperFocused: { backgroundColor: '#F8FCFC', borderColor: colors.teal, borderWidth: 2, paddingHorizontal: 14 },
+  input: { flex: 1, height: '100%', color: '#18384F', fontSize: 15 },
+  button: { height: 54, marginTop: 6, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.teal, shadowColor: '#075962', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 3 },
+  buttonPressed: { opacity: 0.82, transform: [{ scale: 0.99 }] },
+  buttonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  footerRow: { flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', marginTop: 24 },
+  footerText: { color: '#60758A', fontSize: 14 },
+  footerLink: { color: colors.teal, fontSize: 14, fontWeight: '800' },
 });

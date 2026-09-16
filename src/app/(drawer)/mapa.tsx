@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { pesqueiros as pesqueirosLocais, Pesqueiro } from '../../data/pesqueiros';
 import { listarPesqueiros } from '../../services/api';
@@ -66,8 +67,9 @@ export default function Mapa() {
         onSelecionar={selecionarPesqueiro}
       />
 
-      <TouchableOpacity style={styles.btnVoltar} onPress={() => router.push('/pesqueiros')}>
-        <Text style={styles.btnVoltarTexto}>← Lista</Text>
+      <TouchableOpacity style={styles.btnVoltar} onPress={() => router.push('/pesqueiros')} accessibilityRole="button" accessibilityLabel="Voltar para a lista">
+        <Ionicons name="chevron-back" size={18} color="#FFFFFF" />
+        <Text style={styles.btnVoltarTexto}>Lista</Text>
       </TouchableOpacity>
     </View>
   );
@@ -102,6 +104,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 16,
     left: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     backgroundColor: 'rgba(6, 42, 74, 0.85)',
     borderRadius: 20,
     paddingVertical: 8,
@@ -112,6 +117,7 @@ const styles = StyleSheet.create({
   },
   btnVoltarTexto: {
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontWeight: '700',
+    fontSize: 14,
   },
 });
